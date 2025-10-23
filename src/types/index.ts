@@ -131,6 +131,13 @@ export interface Venda {
   formaPagamento: string;
   enderecoEntrega: Endereco;
   itens: ItemVenda[];
+  
+  // --- CAMPOS ADICIONADOS ---
+  paymentIntentId?: string; 
+  pixQrCodeData?: string; 
+  pixQrCodeUrl?: string; 
+  boletoUrl?: string;    
+  boletoLinhaDigitavel?: string; 
 }
 
 export interface ItemVenda {
@@ -146,7 +153,7 @@ export interface ItemVenda {
 export interface VendaDTO {
   clienteId: number;
   formaPagamento: string;
-  paymentMethodId: string;
+  paymentMethodId?: string
   enderecoEntregaId?: number;
   itens: Array<{
     produtoId: number;
