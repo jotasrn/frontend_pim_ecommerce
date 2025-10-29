@@ -7,12 +7,11 @@ import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { showToast } from '../../utils/toastHelper';
 import { formatApiError, formatCurrency } from '../../utils/apiHelpers';
-import { Endereco, VendaDTO, Venda } from '../../types'; // Import Venda
+import { Endereco, VendaDTO, Venda } from '../../types';
 import { enderecoService } from '../../services/enderecoService';
 import { vendaService } from '../../services/vendaService';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
-// Interface das props atualizada para lidar com PIX/Boleto
 interface ModalPagamentoProps {
   aoFechar: () => void;
   aoSucessoCartao: () => void;
@@ -60,13 +59,13 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
   const [mostrarFormNovoEndereco, setMostrarFormNovoEndereco] = useState(false);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(false);
 
-  // **** CORREÇÃO PRINCIPAL AQUI: Adicionado 'isSubmitting' ****
   const { register, handleSubmit, trigger, getValues, watch, control, reset, setValue, formState: { errors, isSubmitting } } = useForm<ValoresFormulario>({
     defaultValues: {
       opcaoEntrega: 'retirada',
       metodoPagamento: 'cartao',
       enderecoSelecionadoId: undefined,
-      nome: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: ''
+      nome: usuario?.nomeCompleto || usuario?.nome || '', // Preenchimento inicial do nome
+      rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: ''
     }
   });
 
@@ -77,31 +76,44 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
   const metodoPagamento = watch('metodoPagamento');
   const enderecoSelecionadoId = watch('enderecoSelecionadoId');
 
+  // Efeito 1: Preenche o nome do usuário se ele carregar DEPOIS do modal
+  useEffect(() => {
+    if (usuario && !getValues('nome')) {
+      setValue('nome', usuario.nomeCompleto || usuario.nome);
+    }
+  }, [usuario, setValue, getValues]);
+
+  // Efeito 2: Define o endereço padrão QUANDO os endereços carregarem
   useEffect(() => {
     if (!carregandoEnderecos && getValues('enderecoSelecionadoId') === undefined) {
       const valorInicial = enderecosCliente.length > 0 ? String(enderecosCliente[0].id) : 'novo';
-      reset({ enderecoSelecionadoId: valorInicial }, { keepDefaultValues: true });
-      setMostrarFormNovoEndereco(valorInicial === 'novo' && opcaoEntrega === 'entrega');
-    } else if (!carregandoEnderecos) {
-      setMostrarFormNovoEndereco(getValues('enderecoSelecionadoId') === 'novo' && opcaoEntrega === 'entrega');
+      setValue('enderecoSelecionadoId', valorInicial); // Usa setValue para não apagar outros defaults
     }
-  }, [carregandoEnderecos, enderecosCliente, reset, getValues, opcaoEntrega]);
-
+  }, [carregandoEnderecos, enderecosCliente, setValue, getValues]);
+  
+  // Efeito 3: Limpa o formulário INTEIRO ao fechar
   useEffect(() => {
     return () => {
       reset({
-          opcaoEntrega: 'retirada', metodoPagamento: 'cartao',
-          enderecoSelecionadoId: undefined, nome: '', rua: '', numero: '',
-          complemento: '', bairro: '', cidade: '', estado: '', cep: ''
+          opcaoEntrega: 'retirada',
+          metodoPagamento: 'cartao', // Garante que 'cartao' é o padrão ao reabrir
+          enderecoSelecionadoId: undefined,
+          nome: usuario?.nomeCompleto || usuario?.nome || '', // Preenche o nome novamente
+          rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: ''
       });
-      setEtapaAtual('entrega'); setProcessando(false);
-      setMensagemErro(''); setMostrarFormNovoEndereco(false);
+      setEtapaAtual('entrega');
+      setProcessando(false);
+      setMensagemErro('');
+      setMostrarFormNovoEndereco(false);
     }
-  }, [aoFechar, reset]);
+  }, [aoFechar, reset, usuario]); // Depende do usuário para preencher o nome corretamente
 
+  // Efeito 4: Controla a visibilidade do formulário de novo endereço
   useEffect(() => {
-    setMostrarFormNovoEndereco(opcaoEntrega === 'entrega' && enderecoSelecionadoId === 'novo');
-  }, [enderecoSelecionadoId, opcaoEntrega]);
+    const deveMostrar = (opcaoEntrega === 'entrega' || metodoPagamento === 'boleto') && enderecoSelecionadoId === 'novo';
+    setMostrarFormNovoEndereco(deveMostrar);
+  }, [enderecoSelecionadoId, opcaoEntrega, metodoPagamento]);
+
 
   const getTaxaEntrega = () => 0.0;
   const precoTotalCarrinho = getPrecoTotal();
@@ -113,19 +125,23 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
     if (etapaAtual === 'entrega') {
       let formValido = true;
       if (!(await trigger("nome"))) formValido = false;
-      if (opcaoEntrega === 'entrega') {
+
+      if (opcaoEntrega === 'entrega' || metodoPagamento === 'boleto') {
         if (enderecoSelecionadoId === 'novo') {
           if (!(await trigger(["rua", "numero", "bairro", "cidade", "estado", "cep"]))) formValido = false;
         } else if (!enderecoSelecionadoId) {
           await trigger("enderecoSelecionadoId");
+          showToast.error(metodoPagamento === 'boleto' ? 'Endereço de cobrança é obrigatório para Boleto.' : 'Selecione um endereço de entrega.');
           formValido = false;
         }
       }
+      
       if (!formValido) {
         showToast.error("Por favor, preencha os campos obrigatórios.");
         return;
       }
       setEtapaAtual('pagamento');
+
     } else if (etapaAtual === 'pagamento') {
       if (metodoPagamento === 'cartao') {
         if (!stripe || !elements) {
@@ -159,7 +175,7 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
     let idEnderecoParaApi: number | undefined = undefined;
     
     try {
-      if (opcaoEntrega === 'entrega') {
+      if (opcaoEntrega === 'entrega' || metodoPagamento === 'boleto') {
         if (dadosFormulario.enderecoSelecionadoId === 'novo') {
           const dadosNovoEndereco = { rua: dadosFormulario.rua, numero: dadosFormulario.numero, complemento: dadosFormulario.complemento, bairro: dadosFormulario.bairro, cidade: dadosFormulario.cidade, estado: dadosFormulario.estado, cep: dadosFormulario.cep };
           const enderecoCriado = await enderecoService.adicionar(usuario.id, dadosNovoEndereco);
@@ -250,7 +266,7 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
             showToast.success("Endereço preenchido! Verifique os dados.");
             if (!uf && address.state) showToast.warning(`Estado "${address.state}" não mapeado para UF.`);
           } else { showToast.error("Não foi possível obter detalhes do endereço."); }
-        } catch (err) { // <-- CORRIGIDO AQUI
+        } catch (err) {
             console.error("Erro ao buscar endereço via Nominatim:", err);
             showToast.error("Falha ao converter localização em endereço."); 
         }
@@ -308,14 +324,16 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
       <div>
         <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo (para cobrança/cartão)</label>
         <input {...register('nome', { required: 'Nome é obrigatório' })} type="text" id="nome"
-          disabled={isSubmitting || buscandoLocalizacao}
+          disabled={isSubmitting || buscandoLocalizacao || processando}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.nome ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
         {errors.nome && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.nome.message}</p>}
       </div>
 
-      {opcaoEntrega === 'entrega' && (
+      {(opcaoEntrega === 'entrega' || metodoPagamento === 'boleto') && (
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-100">2. Endereço de Entrega</h3>
+          <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-100">
+            {metodoPagamento === 'boleto' && opcaoEntrega === 'retirada' ? '2. Endereço de Cobrança (Obrigatório para Boleto)' : '2. Endereço de Entrega'}
+          </h3>
           {carregandoEnderecos ? (<LoadingSpinner size="sm" text="Carregando endereços..." />) : (
             <Controller name="enderecoSelecionadoId" control={control} rules={{ required: 'Selecione ou adicione um endereço' }} render={({ field }) => (
                 <div className="space-y-3">
@@ -343,7 +361,7 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
             <div className="mt-4 space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700/30 animate-fadeIn">
               <h4 className="font-medium text-gray-700 dark:text-gray-200">Detalhes do Novo Endereço</h4>
                <div className="mb-2">
-                  <button type="button" onClick={buscarEnderecoAtual} disabled={buscandoLocalizacao || isSubmitting}
+                  <button type="button" onClick={buscarEnderecoAtual} disabled={buscandoLocalizacao || isSubmitting || processando}
                     className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
                     {buscandoLocalizacao ? ( <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Buscando...</> ) : ( <><MapPin className="w-4 h-4 mr-2" /> Usar Localização Atual</> )}
                   </button>
@@ -351,39 +369,39 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
                </div>
               <div>
                  <label htmlFor="cep-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP</label>
-                 <input {...register('cep', { required: mostrarFormNovoEndereco ? 'CEP é obrigatório' : false })} type="text" id="cep-novo" disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.cep ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                 <input {...register('cep', { required: mostrarFormNovoEndereco ? 'CEP é obrigatório' : false })} type="text" id="cep-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.cep ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                  {errors.cep && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.cep.message}</p>}
               </div>
               <div>
                  <label htmlFor="rua-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rua / Avenida</label>
-                 <input {...register('rua', { required: mostrarFormNovoEndereco ? 'Rua é obrigatória' : false })} type="text" id="rua-novo" disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.rua ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                 <input {...register('rua', { required: mostrarFormNovoEndereco ? 'Rua é obrigatória' : false })} type="text" id="rua-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.rua ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                  {errors.rua && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.rua.message}</p>}
               </div>
               <div className="grid grid-cols-3 gap-4">
                  <div className="col-span-1">
                    <label htmlFor="numero-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número</label>
-                   <input {...register('numero', { required: mostrarFormNovoEndereco ? 'Número é obrigatório' : false })} type="text" id="numero-novo" disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.numero ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                   <input {...register('numero', { required: mostrarFormNovoEndereco ? 'Número é obrigatório' : false })} type="text" id="numero-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.numero ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                    {errors.numero && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.numero.message}</p>}
                  </div>
                  <div className="col-span-2">
                    <label htmlFor="complemento-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Complemento (Opcional)</label>
-                   <input {...register('complemento')} type="text" id="complemento-novo" disabled={isSubmitting || buscandoLocalizacao} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60" />
+                   <input {...register('complemento')} type="text" id="complemento-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60" />
                  </div>
               </div>
               <div>
                  <label htmlFor="bairro-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro</label>
-                 <input {...register('bairro', { required: mostrarFormNovoEndereco ? 'Bairro é obrigatório' : false })} type="text" id="bairro-novo" disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.bairro ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                 <input {...register('bairro', { required: mostrarFormNovoEndereco ? 'Bairro é obrigatório' : false })} type="text" id="bairro-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.bairro ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                  {errors.bairro && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.bairro.message}</p>}
               </div>
               <div className="grid grid-cols-3 gap-4">
                  <div className="col-span-2">
                    <label htmlFor="cidade-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cidade</label>
-                   <input {...register('cidade', { required: mostrarFormNovoEndereco ? 'Cidade é obrigatória' : false })} type="text" id="cidade-novo" disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.cidade ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                   <input {...register('cidade', { required: mostrarFormNovoEndereco ? 'Cidade é obrigatória' : false })} type="text" id="cidade-novo" disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.cidade ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                    {errors.cidade && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.cidade.message}</p>}
                  </div>
                  <div className="col-span-1">
                    <label htmlFor="estado-novo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado (UF)</label>
-                   <input {...register('estado', { required: mostrarFormNovoEndereco ? 'Estado é obrigatório' : false, maxLength: { value: 2, message: 'UF inválida' }, pattern: { value: /^[A-Z]{2}$/i, message: 'UF inválida'} })} type="text" id="estado-novo" maxLength={2} disabled={isSubmitting || buscandoLocalizacao} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 uppercase bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.estado ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
+                   <input {...register('estado', { required: mostrarFormNovoEndereco ? 'Estado é obrigatório' : false, maxLength: { value: 2, message: 'UF inválida' }, pattern: { value: /^[A-Z]{2}$/i, message: 'UF inválida'} })} type="text" id="estado-novo" maxLength={2} disabled={isSubmitting || buscandoLocalizacao || processando} className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 uppercase bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.estado ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`} />
                    {errors.estado && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.estado.message || 'UF inválida'}</p>}
                  </div>
               </div>
@@ -425,40 +443,57 @@ const ModalPagamento: React.FC<ModalPagamentoProps> = ({ aoFechar, aoSucessoCart
          </div>
        )}
        {metodoPagamento === 'pix' && (<div className="mt-6 bg-blue-50 dark:bg-blue-900/30 p-4 rounded-md border border-blue-200 dark:border-blue-700 text-center"><p className="text-sm text-blue-800 dark:text-blue-300">Ao finalizar, você receberá as instruções e o QR Code para pagamento via PIX.</p></div>)}
-       {metodoPagamento === 'boleto' && (<div className="mt-6 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border border-gray-200 dark:border-gray-700 text-center"><p className="text-sm text-gray-700 dark:text-gray-300">Ao finalizar, o boleto será gerado e enviado para o seu e-mail.</p></div>)}
+       {metodoPagamento === 'boleto' && (<div className="mt-6 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border border-gray-200 dark:border-gray-700 text-center"><p className="text-sm text-gray-700 dark:text-gray-300">O boleto será gerado. Um endereço de cobrança é obrigatório.</p></div>)}
      </div>
   );
 
    const getEnderecoConfirmacao = (): Endereco | null => {
-        if (opcaoEntrega === 'retirada') return null;
+        if (opcaoEntrega === 'retirada' && metodoPagamento !== 'boleto') return null;
+        
+        let enderecoEscolhido: Endereco | null = null;
+
         if (enderecoSelecionadoId === 'novo') {
-            return {
+            enderecoEscolhido = {
                 id: 0, rua: getValues("rua"), numero: getValues("numero"), bairro: getValues("bairro"),
                 cidade: getValues("cidade"), estado: getValues("estado"), cep: getValues("cep"),
                 complemento: getValues("complemento") || undefined
             } as Endereco;
+        } else {
+             enderecoEscolhido = enderecosCliente.find(end => String(end.id) === enderecoSelecionadoId) || null;
         }
-        return enderecosCliente.find(end => String(end.id) === enderecoSelecionadoId) || null;
+        
+        if (!enderecoEscolhido && metodoPagamento === 'boleto') {
+            enderecoEscolhido = enderecosCliente.length > 0 ? enderecosCliente[0] : null;
+        }
+
+        return enderecoEscolhido;
    }
 
    const renderEtapaConfirmacao = () => {
        const endereco = getEnderecoConfirmacao();
+       const ehCobrancaApenas = (metodoPagamento === 'boleto' && opcaoEntrega === 'retirada');
+
        return (
          <div className="space-y-6">
            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">4. Confirmar Pedido</h3>
            <div className="space-y-4">
-             {opcaoEntrega !== 'retirada' && endereco && (
-               <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border dark:border-gray-700"><h4 className="font-semibold mb-2 flex items-center text-gray-700 dark:text-gray-200"><MapPin className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" /> Endereço de Entrega</h4>
+             {endereco && (
+               <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border dark:border-gray-700"><h4 className="font-semibold mb-2 flex items-center text-gray-700 dark:text-gray-200"><MapPin className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" /> {ehCobrancaApenas ? 'Endereço de Cobrança' : 'Endereço de Entrega'}</h4>
                  <p className="text-sm text-gray-800 dark:text-gray-100 font-medium">{getValues("nome")}</p>
                  <p className="text-sm text-gray-600 dark:text-gray-300">{`${endereco.rua}, ${endereco.numero}${endereco.complemento ? ' - '+endereco.complemento : ''}`}</p>
                  <p className="text-sm text-gray-600 dark:text-gray-300">{`${endereco.bairro}, ${endereco.cidade} - ${endereco.estado}`}</p>
                  <p className="text-sm text-gray-600 dark:text-gray-400">CEP: {endereco.cep}</p>
                </div>
              )}
+             
              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border dark:border-gray-700"><h4 className="font-semibold mb-2 flex items-center text-gray-700 dark:text-gray-200">{opcaoEntrega === 'retirada'? <Building className="w-5 h-5 mr-2 text-green-600 dark:text-green-400"/>: <Truck className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />} Método de Entrega</h4><p className="text-sm text-gray-800 dark:text-gray-100 capitalize">{opcaoEntrega}</p></div>
+             
              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md border dark:border-gray-700"><h4 className="font-semibold mb-2 flex items-center text-gray-700 dark:text-gray-200"><CreditCard className="w-5 h-5 mr-2 text-blue-500 dark:text-blue-400" /> Método de Pagamento</h4><p className="text-sm text-gray-800 dark:text-gray-100 capitalize">{metodoPagamento}</p>
-                {metodoPagamento === 'cartao' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Será cobrado no cartão informado.</p>} {metodoPagamento === 'pix' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Instruções de pagamento serão exibidas após finalizar.</p>} {metodoPagamento === 'boleto' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">O boleto será enviado para seu e-mail.</p>}
+                {metodoPagamento === 'cartao' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Será cobrado no cartão informado.</p>}
+                {metodoPagamento === 'pix' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Instruções de pagamento serão exibidas após finalizar.</p>}
+                {metodoPagamento === 'boleto' && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">O boleto será gerado com o endereço de cobrança informado.</p>}
              </div>
+             
              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <div className="flex justify-between text-sm mb-1"><span className="text-gray-600 dark:text-gray-400">Subtotal Produtos</span><span className="font-medium text-gray-800 dark:text-gray-100">{formatCurrency(precoTotalCarrinho)}</span></div>
                 <div className="flex justify-between text-sm mb-2"><span className="text-gray-600 dark:text-gray-400">Taxa de Entrega</span><span className="font-medium text-gray-800 dark:text-gray-100">{taxaEntrega > 0 ? formatCurrency(taxaEntrega) : 'Grátis'}</span></div>

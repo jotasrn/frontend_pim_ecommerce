@@ -3,7 +3,7 @@ import { useProdutos } from '../hooks/useProdutos';
 import { useCategorias } from '../hooks/useCategorias';
 import { Produto, Categoria } from '../types';
 import ProductCard from './CartaoProduto';
-import ProductDetailsModal from './modals/ProdutoDetalhesModal';
+import ProductDetailsModal from './modals/ModalProdutoDetalhes';
 import LoadingSpinner from './shared/LoadingSpinner'; 
 
 const CatalogoProduto: React.FC = () => {

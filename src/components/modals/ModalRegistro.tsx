@@ -1,7 +1,6 @@
+// src/components/modals/ModalRegistro.tsx
 import React, { useState } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { formatApiError } from '../../utils/apiHelpers';
+import { X, Eye, EyeOff} from 'lucide-react';
 import { GoogleIcon } from '../icons/GoogleIcon';
 import { RegistroRequest } from '../../types';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -9,17 +8,25 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 interface ModalRegistroProps {
   onClose: () => void;
   onLoginClick: () => void;
+  onSubmeterManual: (data: RegistroRequest) => void;
+  onTriggerGoogleLogin: () => void; // <-- MUDADO: Esta é a função que abre o pop-up
+  isLoading: boolean;
 }
 
-const ModalRegistro: React.FC<ModalRegistroProps> = ({ onClose, onLoginClick }) => {
+const ModalRegistro: React.FC<ModalRegistroProps> = ({
+  onClose,
+  onLoginClick,
+  onSubmeterManual,
+  onTriggerGoogleLogin, // <-- MUDADO
+  isLoading
+}) => {
+  
   const [dadosFormulario, setDadosFormulario] = useState<RegistroRequest>({
     nomeCompleto: '', email: '', senha: '', cpf: '', telefone: '',
   });
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mensagemErro, setMensagemErro] = useState('');
-  const [processandoRegistro, setProcessandoRegistro] = useState(false);
-  const { registrar, loginComGoogle, carregando: carregandoAuth } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,23 +44,15 @@ const ModalRegistro: React.FC<ModalRegistroProps> = ({ onClose, onLoginClick }) 
       setMensagemErro('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
-    setProcessandoRegistro(true);
-    try {
-      const usuarioLogado = await registrar(dadosFormulario);
-       if(usuarioLogado) {
-            onClose();
-       }
-    } catch (err) {
-      setMensagemErro(formatApiError(err));
-    } finally {
-      setProcessandoRegistro(false);
-    }
+    onSubmeterManual(dadosFormulario);
   };
 
   const handleGoogleLoginClick = () => {
-     loginComGoogle();
+     onTriggerGoogleLogin(); // <-- MUDADO: Chama o trigger do pop-up
+     // Não abre o ModalTermos aqui, o AuthContext/PaginaInicial farão isso
   }
-  const estaCarregando = processandoRegistro || carregandoAuth;
+
+  const estaCarregando = isLoading;
 
   return (
     <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -136,7 +135,7 @@ const ModalRegistro: React.FC<ModalRegistroProps> = ({ onClose, onLoginClick }) 
             <button type="submit" disabled={estaCarregando}
               className={`w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors`}
             >
-              {estaCarregando ? <LoadingSpinner size="sm" /> : 'Cadastrar'}
+              {estaCarregando ? <LoadingSpinner size="sm" text="Aguarde..." /> : 'Continuar'}
             </button>
           </form>
 

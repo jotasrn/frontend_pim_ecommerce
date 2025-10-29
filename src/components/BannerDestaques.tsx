@@ -158,7 +158,6 @@ const BannerDestaques: React.FC = () => {
         .slick-prev:before, .slick-next:before { content: '' !important; }
         .slick-wrapper .slick-prev { left: 10px; }
         .slick-wrapper .slick-next { right: 10px; }
-        /* Adicionar estilos para as setas no modo escuro, se necessário */
         .dark .slick-wrapper .slick-arrow { background-color: rgba(55, 65, 81, 0.4); /* Exemplo: gray-700 com opacidade */ }
         .dark .slick-wrapper .slick-arrow:hover { background-color: rgba(55, 65, 81, 0.6); }
       `}</style>

@@ -1,6 +1,5 @@
 import React from 'react';
 
-// 1. Componente renomeado para 'BannerPrincipal'
 const BannerPrincipal: React.FC = () => {
   return (
     <section className="pt-28 pb-16 md:pt-32 md:pb-20 bg-gradient-to-r from-green-500 to-green-600 text-white">

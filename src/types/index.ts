@@ -19,6 +19,7 @@ export interface Usuario {
   ativo?: boolean;
   cpf?: string;
   telefone?: string;
+  googleId?: string;
 }
 
 /**
@@ -181,3 +182,34 @@ export type PromocaoData = {
   ativa: boolean;
   produtoIds: number[];
 };
+
+export interface Faq {
+  id: number;
+  pergunta: string;
+  resposta: string;
+  ativa: boolean;
+}
+
+export interface DuvidaResposta {
+  id: number;
+  resposta: string;
+  dataResposta: string;
+  gerente: Usuario; 
+}
+
+export interface Duvida {
+  id: number;
+  nome: string;
+  email: string;
+  telefone: string;
+  duvida: string;
+  isPublica: boolean;
+  status: string; 
+  dataCriacao: string; 
+  resposta: DuvidaResposta | null;
+}
+
+export interface DuvidaRequestDTO {
+  titulo: string;
+  email: string;
+  pergunta: string;}

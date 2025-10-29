@@ -1,21 +1,22 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Usuario, RegistroRequest } from '../types';
 import { authService } from '../services/authService';
 import api from '../services/api';
 import { useGoogleLogin, CodeResponse } from '@react-oauth/google';
-import { showToast } from '../utils/toastHelper'; 
+import { showToast } from '../utils/toastHelper';
 import { formatApiError } from '../utils/apiHelpers';
 
-// --- Tipagem do Contexto ---
 interface AuthContextType {
   usuario: Usuario | null;
   carregando: boolean;
-  login: (email: string, senha: string) => Promise<Usuario | null>; 
-  registrar: (dadosRegistro: RegistroRequest) => Promise<Usuario | null>; 
+  googleCodePendente: string | null;
+  login: (email: string, senha: string) => Promise<Usuario | null>;
+  registrar: (dadosRegistro: RegistroRequest) => Promise<Usuario | null>;
   logout: () => void;
   verificarPermissao: (permissao: string) => boolean;
   loginComGoogle: () => void;
+  finalizarLoginGoogle: () => Promise<Usuario | null>;
+  cancelarLoginGoogle: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,15 +36,15 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [googleCodePendente, setGoogleCodePendente] = useState<string | null>(null);
 
   const logout = useCallback(() => {
     setUsuario(null);
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
-    showToast.info("Sessão encerrada."); // Mensagem de logout
+    showToast.info("Sessão encerrada.");
   }, []);
 
-  // Efeito para carregar usuário do localStorage ao iniciar
   useEffect(() => {
     const carregarUsuarioLogado = async () => {
       const token = localStorage.getItem('token');
@@ -51,7 +52,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           const dadosUsuario = await authService.getMeuPerfil();
-          // Normaliza o nome do usuário
           const nomeNormalizado = dadosUsuario.nomeCompleto || dadosUsuario.nome || 'Usuário';
           setUsuario({ ...dadosUsuario, nome: nomeNormalizado });
         } catch (error) {
@@ -59,10 +59,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           logout();
         }
       }
-      setCarregando(false); 
+      setCarregando(false);
     };
     carregarUsuarioLogado();
-  }, [logout]); // logout é dependência estável
+  }, [logout]);
 
   const login = async (email: string, senha: string): Promise<Usuario | null> => {
     setCarregando(true);
@@ -70,68 +70,85 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { token } = await authService.login({ email, senha });
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
       const dadosUsuario = await authService.getMeuPerfil();
       const nomeNormalizado = dadosUsuario.nomeCompleto || dadosUsuario.nome || 'Usuário';
       const usuarioLogado = { ...dadosUsuario, nome: nomeNormalizado };
       setUsuario(usuarioLogado);
       showToast.success(`Bem-vindo(a) de volta, ${nomeNormalizado.split(' ')[0]}!`);
       return usuarioLogado;
-
     } catch (error) {
-      console.error("Erro no login:", error);
-      logout(); // Garante limpeza em caso de falha
+      logout();
       throw error;
     } finally {
       setCarregando(false);
     }
   };
 
-  // Função de Registro
   const registrar = async (dadosRegistro: RegistroRequest): Promise<Usuario | null> => {
     setCarregando(true);
     try {
       await authService.registrar(dadosRegistro);
       return await login(dadosRegistro.email, dadosRegistro.senha);
-
     } catch (error) {
-      console.error("Erro no registro:", error);
       setCarregando(false);
       throw error;
     }
   };
 
+  const processarSucessoGoogle = (codeResponse: Omit<CodeResponse, 'error' | 'error_description' | 'error_uri'>) => {
+    setGoogleCodePendente(codeResponse.code);
+    setCarregando(false);
+  };
 
-  const processarSucessoGoogle = async (codeResponse: Omit<CodeResponse, 'error' | 'error_description' | 'error_uri'>) => {
-    if (carregando) return;
+  // --- CORREÇÃO AQUI (Erro 1 e 2) ---
+  const processarErroGoogle = (error?: unknown) => {
+    console.error('Erro no fluxo do Google Login:', error);
+    // Usando formatApiError e mudando 'any' para 'unknown'
+    showToast.error(formatApiError(error) || "Falha ao iniciar login com Google. Verifique pop-ups.");
+    setCarregando(false);
+  }
+  // --- FIM DA CORREÇÃO ---
+
+  const loginComGoogle = useGoogleLogin({
+    onSuccess: processarSucessoGoogle,
+    onError: processarErroGoogle,
+    onNonOAuthError: () => setCarregando(false),
+    flow: 'auth-code',
+  });
+
+  const finalizarLoginGoogle = async (): Promise<Usuario | null> => {
+    if (!googleCodePendente) {
+      throw new Error("Nenhum código de autenticação do Google pendente.");
+    }
+    
     setCarregando(true);
+    
     try {
-      const { token } = await authService.loginComGoogle(codeResponse.code);
+      const { token } = await authService.loginComGoogle(googleCodePendente);
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       const dadosUsuario = await authService.getMeuPerfil();
       const nomeNormalizado = dadosUsuario.nomeCompleto || dadosUsuario.nome || 'Usuário Google';
-      setUsuario({ ...dadosUsuario, nome: nomeNormalizado });
+      const usuarioLogado = { ...dadosUsuario, nome: nomeNormalizado };
+      
+      setUsuario(usuarioLogado);
       showToast.success(`Bem-vindo(a), ${nomeNormalizado.split(' ')[0]}!`);
+      setGoogleCodePendente(null);
+      return usuarioLogado;
 
     } catch (error) {
-      console.error("Falha no processamento do login com Google:", error);
-      showToast.error(formatApiError(error));
       logout();
+      setGoogleCodePendente(null);
+      throw error; // Deixa o PaginaInicial.tsx mostrar o erro formatado
     } finally {
       setCarregando(false);
     }
   };
-
-  const loginComGoogle = useGoogleLogin({
-    onSuccess: processarSucessoGoogle,
-    onError: (error) => {
-        console.error('Erro no fluxo do Google Login:', error);
-        showToast.error("Falha ao iniciar login com Google. Verifique pop-ups.");
-    },
-    flow: 'auth-code',
-  });
+  
+  const cancelarLoginGoogle = () => {
+      setGoogleCodePendente(null);
+  }
 
   const verificarPermissao = (permissao: string): boolean => {
     return usuario?.permissao?.toLowerCase() === permissao.toLowerCase();
@@ -140,11 +157,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = {
     usuario,
     carregando,
+    googleCodePendente,
     login,
     registrar,
     logout,
     verificarPermissao,
     loginComGoogle,
+    finalizarLoginGoogle,
+    cancelarLoginGoogle
   };
 
   return (

@@ -7,7 +7,7 @@ const Rodape: React.FC = () => {
     <footer className="bg-gray-100 dark:bg-gray-800 pt-12 pb-6 text-gray-600 dark:text-gray-400 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-8 border-b border-gray-200 dark:border-gray-700">
-
+          
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Leaf className="h-6 w-6 text-green-500" />
@@ -30,16 +30,17 @@ const Rodape: React.FC = () => {
               <li><a href="/#produtos" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Produtos</a></li>
               <li><a href="/#sobre" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Sobre Nós</a></li>
               <li><a href="/#contato" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Contato</a></li>
+              <li><Link to="/faq" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">FAQ</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-4 text-sm uppercase tracking-wider">Contato</h4>
             <ul className="space-y-2 text-sm">
-              <li>Tel: (00) 1234-5678</li>
+              <li>Tel: (61) 1234-5678</li>
               <li>Email: contato@hortifruti.com</li>
-              <li>Rua das Frutas, 123</li>
-              <li>São Paulo, SP - 01234-567</li>
+              <li>Sgas Quadra 913, Conjunto B - Asa Sul</li>
+              <li>Brasília - DF, 70390-130</li>
             </ul>
           </div>
 
