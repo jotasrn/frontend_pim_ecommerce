@@ -9,6 +9,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
+//teste
 import PaginaInicial from './pages/HomePage';
 import Navbar from './components/shared/Navbar';
 import Rodape from './components/shared/Rodape';
