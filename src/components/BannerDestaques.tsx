@@ -47,7 +47,6 @@ const NextArrow: React.FC<ArrowProps> = ({ className, style, onClick }) => {
   );
 }
 
-
 const BannerDestaques: React.FC = () => {
   const [promocoesDestaque, setPromocoesDestaque] = useState<Promocao[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,12 +58,12 @@ const BannerDestaques: React.FC = () => {
       setError(null);
       try {
         const todasPromocoes = await promocaoService.listar();
+
         const promocoesFiltradas = todasPromocoes.filter(promo =>
-          promo.ativa &&
-          promo.produtos && promo.produtos.length > 0 &&
-          promo.produtos.some(p => p.imagemUrl)
+          promo.ativa && promo.imagemUrl
         );
         setPromocoesDestaque(promocoesFiltradas);
+
       } catch (err) {
         setError(formatApiError(err));
         console.error("Erro ao buscar promoções para destaques:", err);
@@ -87,12 +86,12 @@ const BannerDestaques: React.FC = () => {
     prevArrow: <PrevArrow />,
     nextArrow: <NextArrow />,
     appendDots: (dots: React.ReactNode) => (
-        <div style={{ bottom: "15px", position: 'absolute', width: '100%' }}>
-          <ul style={{ margin: "0px", padding: '0px' }}> {dots} </ul>
-        </div>
+      <div style={{ bottom: "15px", position: 'absolute', width: '100%' }}>
+        <ul style={{ margin: "0px", padding: '0px' }}> {dots} </ul>
+      </div>
     ),
     customPaging: () => (
-        <div className="w-2 h-2 bg-white/50 dark:bg-gray-400/50 rounded-full slick-dot-custom cursor-pointer"></div>
+      <div className="w-2 h-2 bg-white/50 dark:bg-gray-400/50 rounded-full slick-dot-custom cursor-pointer"></div>
     )
   };
 
@@ -118,36 +117,38 @@ const BannerDestaques: React.FC = () => {
     <section className="py-8 bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="slick-wrapper">
-            <Slider {...settings}>
-              {promocoesDestaque.map((promo) => {
-                const produtoComImagem = promo.produtos.find(p => p.imagemUrl);
-                const imageUrl = produtoComImagem?.imagemUrl || 'https://via.placeholder.com/1200x400/cccccc/888888?text=Promoção';
-                const altText = produtoComImagem?.nome || promo.descricao || 'Promoção';
+          <Slider {...settings}>
+            {promocoesDestaque.map((promo) => {
 
-                return (
-                  <div key={promo.id} className="outline-none focus:outline-none px-1">
-                        <div className="relative rounded-lg overflow-hidden shadow-lg aspect-w-16 aspect-h-6 md:aspect-h-5 lg:aspect-h-4 bg-gray-300 dark:bg-gray-700">
-                            <img
-                              src={imageUrl}
-                              alt={`Promoção: ${altText}`}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end p-4 md:p-6">
-                              <div>
-                                <h3 className="text-white text-lg md:text-xl lg:text-2xl font-semibold drop-shadow-md line-clamp-2">
-                                  {promo.descricao}
-                                </h3>
-                                <p className="text-yellow-300 font-bold text-base md:text-lg drop-shadow-md mt-1">
-                                    {promo.percentualDesconto}% OFF!
-                                </p>
-                              </div>
-                            </div>
-                        </div>
+              const imageUrl = promo.imagemUrl;
+              const altText = promo.descricao || 'Promoção';
+
+              return (
+                <div key={promo.id} className="outline-none focus:outline-none px-1">
+                  <div className="relative flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg h-48 sm:h-56 md:h-60">
+
+                    <img
+                      src={imageUrl}
+                      alt={`Promoção: ${altText}`}
+                      className="object-contain max-h-32 md:max-h-40 lg:max-h-48 w-auto mx-auto"
+                      loading="lazy"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end justify-center text-center p-4">
+                      <div>
+                        <h3 className="text-white text-sm md:text-base lg:text-lg font-semibold drop-shadow-md line-clamp-2">
+                          {promo.descricao}
+                        </h3>
+                        <p className="text-yellow-300 font-bold text-xs md:text-sm mt-1">
+                          {promo.percentualDesconto}% OFF!
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </Slider>
+                </div>
+              );
+            })}
+          </Slider>
         </div>
       </div>
       <style>{`
@@ -158,7 +159,7 @@ const BannerDestaques: React.FC = () => {
         .slick-prev:before, .slick-next:before { content: '' !important; }
         .slick-wrapper .slick-prev { left: 10px; }
         .slick-wrapper .slick-next { right: 10px; }
-        .dark .slick-wrapper .slick-arrow { background-color: rgba(55, 65, 81, 0.4); /* Exemplo: gray-700 com opacidade */ }
+        .dark .slick-wrapper .slick-arrow { background-color: rgba(55, 65, 81, 0.4); }
         .dark .slick-wrapper .slick-arrow:hover { background-color: rgba(55, 65, 81, 0.6); }
       `}</style>
     </section>

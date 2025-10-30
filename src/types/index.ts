@@ -171,6 +171,7 @@ export interface Promocao {
   dataInicio: string;
   dataFim: string;
   ativa: boolean;
+  imagemUrl?: string;
   produtos: Produto[];
 }
 
@@ -180,8 +181,12 @@ export type PromocaoData = {
   dataInicio: string;
   dataFim: string;
   ativa: boolean;
-  produtoIds: number[];
 };
+
+export interface FiltrosPromocoes {
+  ativa?: boolean;
+  data?: string;
+}
 
 export interface Faq {
   id: number;

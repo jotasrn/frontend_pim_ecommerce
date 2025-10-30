@@ -3,10 +3,7 @@ import api from './api';
 import { Promocao } from '../types'; // Certifique-se que Promocao em types.ts inclui a lista de produtos
 
 export const promocaoService = {
-  /**
-   * Busca todas as promoções da API.
-   * O backend precisa retornar as promoções com os produtos associados (pelo menos ID e imagemUrl).
-   */
+
   listar: async (): Promise<Promocao[]> => {
     try {
       // Ajuste o endpoint se necessário. Idealmente, ele já traz os produtos.
