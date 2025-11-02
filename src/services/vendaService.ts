@@ -1,14 +1,10 @@
-// src/services/vendaService.ts
 import api from './api';
 import { Venda, VendaDTO } from '../types';
 
 export const vendaService = {
-  /**
-   * Envia o pedido completo para o back-end para processamento.
-   */
-  realizarVenda: async (dadosVenda: VendaDTO): Promise<Venda> => {
+  realizarVenda: async (vendaDTO: VendaDTO): Promise<Venda> => {
     try {
-      const response = await api.post<Venda>('/api/vendas', dadosVenda);
+      const response = await api.post<Venda>('/api/vendas', vendaDTO);
       return response.data;
     } catch (error) {
       console.error('Erro ao realizar venda:', error);
@@ -16,17 +12,25 @@ export const vendaService = {
     }
   },
 
-  /**
-   * Busca o histórico de vendas do cliente logado.
-   */
   listarMinhasVendas: async (): Promise<Venda[]> => {
     try {
-      // O token JWT já é adicionado automaticamente pelo interceptor do api.ts
       const response = await api.get<Venda[]>('/api/vendas/minhas-vendas');
       return response.data;
     } catch (error) {
       console.error('Erro ao listar minhas vendas:', error);
-      throw new Error('Não foi possível carregar o seu histórico de pedidos.');
+      throw error;
     }
+  },
+
+  baixarComprovante: async (pedidoId: number): Promise<Blob> => {
+     try {
+       const response = await api.get(`/api/vendas/${pedidoId}/comprovante`, {
+         responseType: 'blob',
+       });
+       return new Blob([response.data], { type: 'application/pdf' });
+     } catch (error) {
+       console.error('Erro ao baixar comprovante:', error);
+       throw error;
+     }
   },
 };

@@ -47,7 +47,11 @@ const NextArrow: React.FC<ArrowProps> = ({ className, style, onClick }) => {
   );
 }
 
-const BannerDestaques: React.FC = () => {
+interface BannerDestaquesProps {
+  onPromocaoClick: (id: number) => void;
+}
+
+const BannerDestaques: React.FC<BannerDestaquesProps> = ({ onPromocaoClick }) => {
   const [promocoesDestaque, setPromocoesDestaque] = useState<Promocao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +62,7 @@ const BannerDestaques: React.FC = () => {
       setError(null);
       try {
         const todasPromocoes = await promocaoService.listar();
-
+        
         const promocoesFiltradas = todasPromocoes.filter(promo =>
           promo.ativa && promo.imagemUrl
         );
@@ -86,12 +90,12 @@ const BannerDestaques: React.FC = () => {
     prevArrow: <PrevArrow />,
     nextArrow: <NextArrow />,
     appendDots: (dots: React.ReactNode) => (
-      <div style={{ bottom: "15px", position: 'absolute', width: '100%' }}>
-        <ul style={{ margin: "0px", padding: '0px' }}> {dots} </ul>
-      </div>
+        <div style={{ bottom: "15px", position: 'absolute', width: '100%' }}>
+          <ul style={{ margin: "0px", padding: '0px' }}> {dots} </ul>
+        </div>
     ),
     customPaging: () => (
-      <div className="w-2 h-2 bg-white/50 dark:bg-gray-400/50 rounded-full slick-dot-custom cursor-pointer"></div>
+        <div className="w-2 h-2 bg-white/50 dark:bg-gray-400/50 rounded-full slick-dot-custom cursor-pointer"></div>
     )
   };
 
@@ -113,33 +117,34 @@ const BannerDestaques: React.FC = () => {
 
   if (promocoesDestaque.length === 0 && !loading) { return null; }
 
-  return (
-    <section className="py-8 bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+   return (
+    <section className="py-6 bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="slick-wrapper">
           <Slider {...settings}>
             {promocoesDestaque.map((promo) => {
-
               const imageUrl = promo.imagemUrl;
               const altText = promo.descricao || 'Promoção';
 
               return (
-                <div key={promo.id} className="outline-none focus:outline-none px-1">
-                  <div className="relative flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg h-48 sm:h-56 md:h-60">
-
+                <div
+                  key={promo.id}
+                  className="outline-none focus:outline-none cursor-pointer"
+                  onClick={() => onPromocaoClick(promo.id)}
+                >
+                  <div className="relative rounded-lg overflow-hidden shadow-lg h-56 md:h-64 lg:h-72 bg-gray-300 dark:bg-gray-700">
                     <img
                       src={imageUrl}
                       alt={`Promoção: ${altText}`}
-                      className="object-contain max-h-32 md:max-h-40 lg:max-h-48 w-auto mx-auto"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end justify-center text-center p-4">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end p-4 md:p-6">
                       <div>
-                        <h3 className="text-white text-sm md:text-base lg:text-lg font-semibold drop-shadow-md line-clamp-2">
+                        <h3 className="text-white text-base md:text-lg lg:text-xl font-semibold drop-shadow-md line-clamp-2">
                           {promo.descricao}
                         </h3>
-                        <p className="text-yellow-300 font-bold text-xs md:text-sm mt-1">
+                        <p className="text-yellow-300 font-bold text-sm md:text-base drop-shadow-md mt-1">
                           {promo.percentualDesconto}% OFF!
                         </p>
                       </div>
@@ -151,6 +156,7 @@ const BannerDestaques: React.FC = () => {
           </Slider>
         </div>
       </div>
+
       <style>{`
         .slick-wrapper .slick-dots li.slick-active .slick-dot-custom { background-color: white !important; opacity: 1 !important; }
         .slick-wrapper .slick-dots li .slick-dot-custom { background-color: white; opacity: 0.5; transition: opacity 0.3s ease; }
@@ -166,4 +172,4 @@ const BannerDestaques: React.FC = () => {
   );
 };
 
-export default BannerDestaques;
+export default BannerDestaques

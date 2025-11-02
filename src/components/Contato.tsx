@@ -20,9 +20,9 @@ const Contato: React.FC = () => {
   const [formularioEnviado, setFormularioEnviado] = useState(false);
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<DuvidaFormData>({
-      defaultValues: {
-          nome: '', email: '', telefone: '', duvida: '', isPublica: false
-      }
+    defaultValues: {
+      nome: '', email: '', telefone: '', duvida: '', isPublica: false
+    }
   });
 
   useEffect(() => {
@@ -42,15 +42,15 @@ const Contato: React.FC = () => {
         email: data.email,
         pergunta: data.duvida
       };
-      
+
       await duvidaService.submeterDuvida(dtoParaEnviar);
       setFormularioEnviado(true);
       showToast.success("Dúvida enviada com sucesso! Responderemos em breve.");
-      
+
       reset({
-          ...data,
-          duvida: '',
-          isPublica: false
+        ...data,
+        duvida: '',
+        isPublica: false
       });
 
       setTimeout(() => {
@@ -102,7 +102,7 @@ const Contato: React.FC = () => {
                     />
                     {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>}
                   </div>
-                   <div>
+                  <div>
                     <label htmlFor="telefone-contato" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone (Opcional)</label>
                     <input
                       type="tel"
@@ -215,43 +215,45 @@ const Contato: React.FC = () => {
             </div>
 
             <div className="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-               <h4 className="text-base font-semibold mb-3 text-gray-800 dark:text-gray-100">
-                 Localização (UNIP Asa Sul)
-               </h4>
-               <a
-                 href="https://www.google.com/maps/place/UNIP+-+Asa+Sul/@-15.8193836,-47.908077,17z/data=!3m1!4b1!4m6!3m5!1s0x935a2a6b29b329c3:0x4d39f7528e578652!8m2!3d-15.8193888!4d-47.9054967!16s%2Fg%2F1tdw1vhm?entry=ttu"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 className="block relative rounded-md overflow-hidden cursor-pointer group"
-                 aria-label="Abrir localização da UNIP Asa Sul no Google Maps"
-               >
-                 <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.117769490186!2d-47.90807702581077!3d-15.81938362489816!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935a2a6b29b329c3%3A0x4d39f7528e578652!2sUNIP%20-%20Asa%20Sul!5e0!3m2!1spt-BR!2sbr!4v1729909252033!5m2!1spt-BR!2sbr"
-                    width="100%"
-                    height="250"
-                    style={{ border: 0 }}
-                    allowFullScreen={false}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Localização da UNIP Asa Sul"
-                    className="pointer-events-none"
-                 ></iframe>
-                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                   <svg
-                     xmlns="http://www.w3.org/2000/svg"
-                     className="w-9 h-9 text-red-600 drop-shadow-lg animate-bounce"
-                     fill="currentColor"
-                     viewBox="0 0 24 24"
-                   >
-                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
-                   </svg>
-                 </div>
-                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <p className="text-white font-semibold bg-black/70 px-4 py-2 rounded-md text-sm">
-                      Abrir no Google Maps
-                    </p>
-                 </div>
-               </a>
+              <h4 className="text-base font-semibold mb-3 text-gray-800 dark:text-gray-100">
+                Localização (UNIP Asa Sul)
+              </h4>
+              <a
+                href="https://maps.app.goo.gl/XX1RGfRNitQB1swZ6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block relative rounded-lg overflow-hidden cursor-pointer group"
+                aria-label="Abrir localização da UNIP Asa Sul no Google Maps"
+              >
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.2005741960567!2d-47.92192962453466!3d-15.81857117291212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935a2a6b29b329c3%3A0x4d39f7528e578652!2sUNIP%20-%20Asa%20Sul!5e0!3m2!1spt-BR!2sbr!4v1730502155000!5m2!1spt-BR!2sbr"
+                  width="100%"
+                  height="280"
+                  style={{ border: 0 }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localização da UNIP Asa Sul"
+                  className="pointer-events-none"
+                ></iframe>
+
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-10 h-10 text-red-600 drop-shadow-lg animate-bounce"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
+                  </svg>
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <p className="text-white font-semibold bg-black/70 px-4 py-2 rounded-md text-sm">
+                    Abrir no Google Maps
+                  </p>
+                </div>
+              </a>
             </div>
           </div>
         </div>

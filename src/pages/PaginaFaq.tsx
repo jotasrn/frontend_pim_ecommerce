@@ -1,19 +1,18 @@
-// src/pages/PaginaFaq.tsx
 import React, { useState, useEffect } from 'react';
 import { faqService } from '../services/faqService';
 import { duvidaService } from '../services/duvidaService';
 import { Faq, Duvida } from '../types';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
-import { AlertCircle, HelpCircle } from 'lucide-react';
+import { AlertCircle, HelpCircle, Send } from 'lucide-react';
 import { formatApiError } from '../utils/apiHelpers';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom'; 
 
-// Componente interno para o Accordion
 const FaqItem: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <details className="border-b dark:border-gray-700 last:border-b-0 group">
     <summary className="py-5 px-4 font-medium text-gray-800 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 list-none flex justify-between items-center transition-colors">
-      {title}
-      {/* Ícone de Chevron que gira */}
-      <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <span className="flex-1 pr-4">{title}</span>
+      <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     </summary>
@@ -28,6 +27,7 @@ const PaginaFaq: React.FC = () => {
   const [duvidas, setDuvidas] = useState<Duvida[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { usuario } = useAuth(); 
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -90,9 +90,9 @@ const PaginaFaq: React.FC = () => {
               </h2>
               <div className="border-t dark:border-gray-700">
                 {duvidas.map(duvida => (
-                  <FaqItem key={`duvida-${duvida.id}`} title={duvida.duvida}>
+                  <FaqItem key={`duvida-${duvida.id}`} title={duvida.pergunta}>
                     <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 py-2 italic text-gray-500 dark:text-gray-400">
-                      "{duvida.duvida}" - {duvida.nome}
+                      "{duvida.pergunta}" - {duvida.titulo}
                     </blockquote>
                     <p className="mt-3 text-green-700 dark:text-green-300 font-medium">
                       <strong>Resposta:</strong> {duvida.resposta?.resposta || 'Aguardando resposta...'}
@@ -112,6 +112,26 @@ const PaginaFaq: React.FC = () => {
           )}
         </div>
       )}
+
+      {!loading && (
+        <div className="mt-12 text-center p-6 bg-white dark:bg-gray-800 shadow rounded-lg border dark:border-gray-700">
+          <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">Não encontrou sua resposta?</h3>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            {usuario
+              ? "Envie sua dúvida diretamente para nossa equipe pela página de contato."
+              : "Faça login para enviar sua dúvida e nossa equipe responderá o mais breve possível."
+            }
+          </p>
+          <Link 
+            to="/#contato" 
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition-colors"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Ir para Contato
+          </Link>
+        </div>
+      )}
+
     </div>
   );
 };

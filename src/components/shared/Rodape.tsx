@@ -26,7 +26,7 @@ const Rodape: React.FC = () => {
           <div>
             <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-4 text-sm uppercase tracking-wider">Links Rápidos</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Home</Link></li>
+              <li><Link to="/" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Inicio</Link></li>
               <li><a href="/#produtos" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Produtos</a></li>
               <li><a href="/#sobre" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Sobre Nós</a></li>
               <li><a href="/#contato" className="hover:text-green-500 dark:hover:text-green-400 transition-colors">Contato</a></li>

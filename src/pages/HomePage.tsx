@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Venda, RegistroRequest } from '../types';
 import { showToast } from '../utils/toastHelper';
 import { formatApiError } from '../utils/apiHelpers';
 
 import Navbar from '../components/shared/Navbar';
-import BannerPrincipal from '../components/BannerPrincipal.tsx';
+import BannerPrincipal from '../components/BannerPrincipal';
 import BannerDestaques from '../components/BannerDestaques';
 import Diferenciais from '../components/Diferenciais';
 import CatalogoProdutos from '../components/CatalogoProdutos';
@@ -17,9 +17,9 @@ import Rodape from '../components/shared/Rodape';
 import VoltarAoTopo from '../components/shared/VoltarAoTopo';
 
 import ModalLogin from '../components/modals/ModalLogin';
-import ModalRegistro from '../components/modals/ModalRegistro.tsx';
-import ModalCarrinho from '../components/modals/ModalCarrinho.tsx';
-import ModalPagamento from '../components/modals/ModalPagamento.tsx';
+import ModalRegistro from '../components/modals/ModalRegistro';
+import ModalCarrinho from '../components/modals/ModalCarrinho';
+import ModalPagamento from '../components/modals/ModalPagamento';
 import ModalExibirPix from '../components/modals/ModalExibirPix';
 import ModalExibirBoleto from '../components/modals/ModalExibirBoleto';
 import ModalTermos from '../components/modals/ModalTermos';
@@ -42,6 +42,8 @@ const PaginaInicial: React.FC = () => {
   const [acaoPendente, setAcaoPendente] = useState<AcaoPendenteRegistro | null>(null);
   const [isGoogleLoginFlow, setIsGoogleLoginFlow] = useState(false);
 
+  const [filtroPromocaoId, setFiltroPromocaoId] = useState<number | null>(null);
+
   const { 
       usuario, 
       carregando, 
@@ -53,7 +55,20 @@ const PaginaInicial: React.FC = () => {
   } = useAuth();
   
   const navigate = useNavigate();
+  const location = useLocation();
 
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
+  
   useEffect(() => {
     if (usuario && !carregando && (modalLoginAberto || modalRegistoAberto || modalTermosAberto)) {
       setModalLoginAberto(false);
@@ -62,6 +77,22 @@ const PaginaInicial: React.FC = () => {
       setAcaoPendente(null);
     }
   }, [usuario, carregando, modalLoginAberto, modalRegistoAberto, modalTermosAberto]);
+
+  const abrirModalLogin = useCallback(() => { 
+    if (!usuario && !carregando) { 
+        setModalRegistoAberto(false); 
+        setModalLoginAberto(true); 
+    }
+  }, [usuario, carregando]);
+
+  const handleFinalizarGoogleLogin = useCallback(async () => {
+     try {
+         await finalizarLoginGoogle();
+     } catch (err) {
+         showToast.error(formatApiError(err));
+         abrirModalLogin();
+     }
+  }, [finalizarLoginGoogle, abrirModalLogin]);
 
   useEffect(() => {
     if (googleCodePendente) {
@@ -74,9 +105,8 @@ const PaginaInicial: React.FC = () => {
         setModalTermosAberto(true);
       }
     }
-  }, [googleCodePendente, isGoogleLoginFlow]); 
+  }, [googleCodePendente, isGoogleLoginFlow, handleFinalizarGoogleLogin]);
 
-  const abrirModalLogin = () => { if (!usuario && !carregando) { setModalRegistoAberto(false); setModalLoginAberto(true); } }
   const fecharModalLogin = () => setModalLoginAberto(false);
   const abrirModalRegistro = () => { setModalLoginAberto(false); setModalRegistoAberto(true); }
   const fecharModalRegistro = () => setModalRegistoAberto(false);
@@ -118,15 +148,6 @@ const PaginaInicial: React.FC = () => {
     loginComGoogle();
   };
   
-  const handleFinalizarGoogleLogin = async () => {
-     try {
-         await finalizarLoginGoogle();
-     } catch (err) {
-         showToast.error(formatApiError(err));
-         abrirModalLogin();
-     }
-  }
-
   const handleCancelarTermos = () => {
     if (acaoPendente?.tipo === 'google-register') {
         cancelarLoginGoogle();
@@ -153,6 +174,14 @@ const PaginaInicial: React.FC = () => {
       }
     }
   };
+
+  const handlePromocaoClick = (id: number) => {
+    setFiltroPromocaoId(prevId => (prevId === id ? null : id));
+    const secaoProdutos = document.getElementById('produtos');
+    if (secaoProdutos) {
+        secaoProdutos.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 relative transition-colors duration-300">
@@ -163,9 +192,9 @@ const PaginaInicial: React.FC = () => {
       />
 
       <BannerPrincipal />
-      <BannerDestaques />
+      <BannerDestaques onPromocaoClick={handlePromocaoClick} />
       <Diferenciais />
-      <CatalogoProdutos />
+      <CatalogoProdutos filtroPromocaoId={filtroPromocaoId} />
       <Sobre />
       <Contato />
       <BoletimInformativo />
