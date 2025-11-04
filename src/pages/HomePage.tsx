@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Venda, RegistroRequest } from '../types';
 import { showToast } from '../utils/toastHelper';
 import { formatApiError } from '../utils/apiHelpers';
@@ -41,8 +41,9 @@ const PaginaInicial: React.FC = () => {
   const [modalTermosAberto, setModalTermosAberto] = useState(false);
   const [acaoPendente, setAcaoPendente] = useState<AcaoPendenteRegistro | null>(null);
   const [isGoogleLoginFlow, setIsGoogleLoginFlow] = useState(false);
-
+  
   const [filtroPromocaoId, setFiltroPromocaoId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { 
       usuario, 
@@ -55,20 +56,7 @@ const PaginaInicial: React.FC = () => {
   } = useAuth();
   
   const navigate = useNavigate();
-  const location = useLocation();
 
-  useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.substring(1);
-      const element = document.getElementById(id);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-    }
-  }, [location]);
-  
   useEffect(() => {
     if (usuario && !carregando && (modalLoginAberto || modalRegistoAberto || modalTermosAberto)) {
       setModalLoginAberto(false);
@@ -182,6 +170,10 @@ const PaginaInicial: React.FC = () => {
         secaoProdutos.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const handleLimparFiltroPromocao = () => {
+    setFiltroPromocaoId(null);
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 relative transition-colors duration-300">
@@ -189,12 +181,18 @@ const PaginaInicial: React.FC = () => {
       <Navbar
         onLoginClick={abrirModalLogin}
         onCartClick={abrirModalCarrinho}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
       />
 
       <BannerPrincipal />
       <BannerDestaques onPromocaoClick={handlePromocaoClick} />
       <Diferenciais />
-      <CatalogoProdutos filtroPromocaoId={filtroPromocaoId} />
+      <CatalogoProdutos 
+        filtroPromocaoId={filtroPromocaoId}
+        onLimparFiltroPromocao={handleLimparFiltroPromocao} 
+        searchTerm={searchTerm}
+      />
       <Sobre />
       <Contato />
       <BoletimInformativo />

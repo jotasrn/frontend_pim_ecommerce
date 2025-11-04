@@ -1,4 +1,3 @@
-// src/components/shared/Navbar.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, UserRound, Search, Menu, X, Leaf, LogOut, ListOrdered, MapPin, Settings, Moon, Sun } from 'lucide-react';
@@ -10,12 +9,13 @@ import NavLink from './NavLink';
 interface NavbarProps {
   onLoginClick: () => void;
   onCartClick: () => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick, searchTerm, onSearchChange }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +52,10 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick }) => {
     setShowUserMenu(false);
   }
 
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  };
+
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled
@@ -65,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick }) => {
         </Link>
 
         <div className="hidden md:flex space-x-6 text-gray-700 dark:text-gray-300">
-          <NavLink to="/" className="hover:text-green-500 transition-colors">Inicio</NavLink>
+          <NavLink to="/" className="hover:text-green-500 transition-colors">Início</NavLink>
           <NavLink to="/#produtos" className="hover:text-green-500 transition-colors">Produtos</NavLink>
           <NavLink to="/#sobre" className="hover:text-green-500 transition-colors">Sobre</NavLink>
           <NavLink to="/#contato" className="hover:text-green-500 transition-colors">Contato</NavLink>
@@ -75,7 +79,8 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick }) => {
           <div className="hidden md:flex items-center relative">
             <input type="text" placeholder="Buscar produtos..."
               className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-48 transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchTerm} 
+              onChange={handleSearchInput}
             />
             <Search className="absolute right-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
           </div>
@@ -140,14 +145,15 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onCartClick }) => {
       {showMobileMenu && (
         <div className="md:hidden bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-slideDown text-gray-700 dark:text-gray-300">
           <div className="p-4 flex flex-col space-y-2">
-            <NavLink to="/" className="py-2 hover:text-green-500" onClick={toggleMobileMenu}>Home</NavLink>
+            <NavLink to="/" className="py-2 hover:text-green-500" onClick={toggleMobileMenu}>Início</NavLink>
             <NavLink to="/#produtos" className="py-2 hover:text-green-500" onClick={toggleMobileMenu}>Produtos</NavLink>
             <NavLink to="/#sobre" className="py-2 hover:text-green-500" onClick={toggleMobileMenu}>Sobre</NavLink>
             <NavLink to="/#contato" className="py-2 hover:text-green-500" onClick={toggleMobileMenu}>Contato</NavLink>
             <div className="relative mt-2">
               <input type="text" placeholder="Buscar produtos..."
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm} 
+                onChange={handleSearchInput}
               />
               <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>

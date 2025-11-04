@@ -4,9 +4,9 @@ import { useProdutos } from '../hooks/useProdutos';
 import { useCategorias } from '../hooks/useCategorias';
 import { Produto, Categoria } from '../types';
 import CartaoProduto from './CartaoProduto';
-import ModalDetalhesProduto from './modals/ModalProdutoDetalhes';
+import ModalDetalhesProduto from './modals/ModalDetalhesProduto';
 import LoadingSpinner from './shared/LoadingSpinner'; 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X as IconeX } from 'lucide-react'; // Renomeado X para IconeX
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -39,16 +39,17 @@ const NextArrow: React.FC<ArrowProps> = ({ className, style, onClick }) => {
 
 interface CatalogoProdutosProps {
   filtroPromocaoId: number | null;
+  onLimparFiltroPromocao: () => void;
+  searchTerm: string;
 }
 
 const ITENS_POR_PAGINA = 12;
 
-const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId }) => {
+const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId, onLimparFiltroPromocao, searchTerm }) => {
   const { produtos, loading: loadingProdutos, error: erroProdutos } = useProdutos(); 
   const { categorias, loading: loadingCategorias, error: erroCategorias } = useCategorias();
   
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -59,14 +60,14 @@ const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId })
   const filteredProducts = useMemo(() => {
     return produtos.filter(product => {
       const categoryMatch = activeCategory === null || product.categoria?.id === activeCategory;
-      const searchMatch = searchQuery === '' || 
-        product.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.descricao && product.descricao.toLowerCase().includes(searchQuery.toLowerCase()));
+      const searchMatch = searchTerm === '' || 
+        product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.descricao && product.descricao.toLowerCase().includes(searchTerm.toLowerCase()));
       const promocaoMatch = filtroPromocaoId === null || 
         (product.promocoes && product.promocoes.some(promo => promo.id === filtroPromocaoId));
       return categoryMatch && searchMatch && promocaoMatch;
     });
-  }, [produtos, activeCategory, searchQuery, filtroPromocaoId]);
+  }, [produtos, activeCategory, searchTerm, filtroPromocaoId]);
   
   const onSaleProducts = useMemo(() => 
     filtroPromocaoId === null ? filteredProducts.filter(p => p.promocoes && p.promocoes.length > 0) : [],
@@ -85,7 +86,7 @@ const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId })
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeCategory, searchQuery, filtroPromocaoId]);
+  }, [activeCategory, searchTerm, filtroPromocaoId]);
 
   const getNomeCategoriaAtiva = () => {
     if (activeCategory === null) return 'Todos os Produtos';
@@ -109,7 +110,7 @@ const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId })
       },
       {
         breakpoint: 640,
-        settings: { slidesToShow: 1, slidesToScroll: 1, centerMode: true, centerPadding: '40px' }
+        settings: { slidesToShow: 1, slidesToScroll: 1, centerMode: true, centerPadding: '40px', arrows: false }
       }
     ],
     prevArrow: <PrevArrow />,
@@ -122,13 +123,6 @@ const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId })
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">
           Nossos Produtos
         </h2>
-
-        <div className="mb-6 md:hidden">
-          <input type="text" placeholder="Buscar produtos..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-            value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
 
         <div className="flex flex-wrap justify-center gap-2 mb-8">
           <button onClick={() => setActiveCategory(null)}
@@ -160,10 +154,17 @@ const CatalogoProdutos: React.FC<CatalogoProdutosProps> = ({ filtroPromocaoId })
         </div>
         
         {filtroPromocaoId !== null && (
-          <div className="text-center mb-8 p-3 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center mb-8 p-3 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md">
             <p className="font-medium text-green-700 dark:text-green-300">
               Mostrando itens da promoção selecionada.
             </p>
+            <button
+              onClick={onLimparFiltroPromocao}
+              className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full hover:bg-green-700 transition-colors shadow-sm"
+            >
+              <IconeX className="w-4 h-4 mr-1" />
+              Limpar Filtro
+            </button>
           </div>
         )}
 
