@@ -33,7 +33,6 @@ const ModalDetalhesProduto: React.FC<ModalDetalhesProdutoProps> = ({ produto, on
 
         <div className="overflow-y-auto p-6 flex-grow">
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-            {/* Imagem */}
             <div>
               <img
                 src={produto.imagemUrl || 'https://via.placeholder.com/400'}
