@@ -3,7 +3,7 @@ import { X, Copy, Check } from 'lucide-react';
 import { Venda } from '../../types';
 import { showToast } from '../../utils/toastHelper';
 import LoadingSpinner from '../shared/LoadingSpinner';
-import { formatCurrency } from '../../utils/apiHelpers'; // Importado
+import { formatCurrency } from '../../utils/apiHelpers'; 
 
 interface ModalExibirPixProps {
   venda: Venda;

@@ -28,7 +28,4 @@ export const usuarioService = {
       throw error;
     }
   }
-  
-  // A lógica de alterar senha pode ser adicionada aqui depois
-  // alterarSenha: async (dados) => ...
 };

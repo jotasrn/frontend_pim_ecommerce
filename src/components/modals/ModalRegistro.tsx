@@ -9,7 +9,7 @@ interface ModalRegistroProps {
   onClose: () => void;
   onLoginClick: () => void;
   onSubmeterManual: (data: RegistroRequest) => void;
-  onTriggerGoogleLogin: () => void; // <-- MUDADO: Esta é a função que abre o pop-up
+  onTriggerGoogleLogin: () => void; 
   isLoading: boolean;
 }
 
@@ -17,7 +17,7 @@ const ModalRegistro: React.FC<ModalRegistroProps> = ({
   onClose,
   onLoginClick,
   onSubmeterManual,
-  onTriggerGoogleLogin, // <-- MUDADO
+  onTriggerGoogleLogin, 
   isLoading
 }) => {
   
@@ -48,8 +48,7 @@ const ModalRegistro: React.FC<ModalRegistroProps> = ({
   };
 
   const handleGoogleLoginClick = () => {
-     onTriggerGoogleLogin(); // <-- MUDADO: Chama o trigger do pop-up
-     // Não abre o ModalTermos aqui, o AuthContext/PaginaInicial farão isso
+     onTriggerGoogleLogin(); 
   }
 
   const estaCarregando = isLoading;

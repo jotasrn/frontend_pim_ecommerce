@@ -23,7 +23,6 @@ const CartContext = createContext<TipoCarrinhoContext | undefined>(undefined);
 
 /**
  * Hook customizado para consumir o contexto do carrinho.
- * (Agora em português: useCarrinho)
  */
 export const useCarrinho = (): TipoCarrinhoContext => {
   const context = useContext(CartContext);

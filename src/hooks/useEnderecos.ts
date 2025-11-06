@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { enderecoService } from '../services/enderecoService';
 import { showToast } from '../utils/toastHelper';
 import { Endereco } from '../types';
-import { useAuth } from '../contexts/AuthContext'; // Importamos o useAuth para obter o ID do cliente
+import { useAuth } from '../contexts/AuthContext';
 
 interface UseEnderecosReturn {
   enderecos: Endereco[];

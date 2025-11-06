@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import ModalAlterarSenha from '../components/modals/ModalAlterarSenha';
 import ModalConfirmarExclusao from '../components/modals/ModalConfirmarExclusao';
-import { usuarioService, PerfilUpdateDTO } from '../services/usuarioService'; // Importar DTO
+import { usuarioService, PerfilUpdateDTO } from '../services/usuarioService'; 
 import { showToast } from '../utils/toastHelper';
 import { formatApiError } from '../utils/apiHelpers';
 
@@ -17,7 +17,7 @@ type PerfilFormData = {
 };
 
 const PaginaMinhaConta: React.FC = () => {
-  const { usuario, logout, carregando } = useAuth(); // Removido 'login' (AuthContext não expõe reloadUsuario)
+  const { usuario, logout, carregando } = useAuth(); 
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);

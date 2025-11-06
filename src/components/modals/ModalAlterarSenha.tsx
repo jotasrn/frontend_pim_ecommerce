@@ -1,10 +1,10 @@
 // src/components/modals/ModalAlterarSenha.tsx
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { X, Loader2, Eye, EyeOff } from 'lucide-react'; // Importar Eye e EyeOff
+import { X, Loader2, Eye, EyeOff } from 'lucide-react'; 
 import { showToast } from '../../utils/toastHelper';
-import { formatApiError } from '../../utils/apiHelpers'; // Importar formatApiError (necessário para a lógica da API)
-import { authService } from '../../services/authService'; // Importar authService (necessário para a lógica da API)
+import { formatApiError } from '../../utils/apiHelpers'; 
+import { authService } from '../../services/authService';
 
 interface ModalAlterarSenhaProps {
   isOpen: boolean;

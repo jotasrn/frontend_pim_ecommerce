@@ -1,9 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Venda, RegistroRequest } from '../types';
-import { showToast } from '../utils/toastHelper';
-import { formatApiError } from '../utils/apiHelpers';
+import React from 'react';
 
 import Navbar from '../components/shared/Navbar';
 import BannerPrincipal from '../components/BannerPrincipal';
@@ -16,181 +11,42 @@ import BoletimInformativo from '../components/BoletimInformativo';
 import Rodape from '../components/shared/Rodape';
 import VoltarAoTopo from '../components/shared/VoltarAoTopo';
 
-import ModalLogin from '../components/modals/ModalLogin';
-import ModalRegistro from '../components/modals/ModalRegistro';
-import ModalCarrinho from '../components/modals/ModalCarrinho';
-import ModalPagamento from '../components/modals/ModalPagamento';
-import ModalExibirPix from '../components/modals/ModalExibirPix';
-import ModalExibirBoleto from '../components/modals/ModalExibirBoleto';
-import ModalTermos from '../components/modals/ModalTermos';
+interface PaginaInicialProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onLoginClick: () => void;
+  onCartClick: () => void;
+  filtroPromocaoId: number | null;
+  onLimparFiltroPromocao: () => void;
+  onPromocaoClick: (id: number) => void;
+}
 
-type AcaoPendenteRegistro = {
-  tipo: 'manual' | 'google-register';
-  dados?: RegistroRequest;
-};
-
-const PaginaInicial: React.FC = () => {
-  const [modalLoginAberto, setModalLoginAberto] = useState(false);
-  const [modalRegistoAberto, setModalRegistoAberto] = useState(false);
-  const [modalCarrinhoAberto, setModalCarrinhoAberto] = useState(false);
-  const [modalPagamentoAberto, setModalPagamentoAberto] = useState(false);
-  const [modalPixAberto, setModalPixAberto] = useState(false);
-  const [modalBoletoAberto, setModalBoletoAberto] = useState(false);
-  const [vendaPendente, setVendaPendente] = useState<Venda | null>(null);
-
-  const [modalTermosAberto, setModalTermosAberto] = useState(false);
-  const [acaoPendente, setAcaoPendente] = useState<AcaoPendenteRegistro | null>(null);
-  const [isGoogleLoginFlow, setIsGoogleLoginFlow] = useState(false);
-  
-  const [filtroPromocaoId, setFiltroPromocaoId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const { 
-      usuario, 
-      carregando, 
-      registrar, 
-      loginComGoogle,
-      googleCodePendente,
-      finalizarLoginGoogle,
-      cancelarLoginGoogle
-  } = useAuth();
-  
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (usuario && !carregando && (modalLoginAberto || modalRegistoAberto || modalTermosAberto)) {
-      setModalLoginAberto(false);
-      setModalRegistoAberto(false);
-      setModalTermosAberto(false);
-      setAcaoPendente(null);
-    }
-  }, [usuario, carregando, modalLoginAberto, modalRegistoAberto, modalTermosAberto]);
-
-  const abrirModalLogin = useCallback(() => { 
-    if (!usuario && !carregando) { 
-        setModalRegistoAberto(false); 
-        setModalLoginAberto(true); 
-    }
-  }, [usuario, carregando]);
-
-  const handleFinalizarGoogleLogin = useCallback(async () => {
-     try {
-         await finalizarLoginGoogle();
-     } catch (err) {
-         showToast.error(formatApiError(err));
-         abrirModalLogin();
-     }
-  }, [finalizarLoginGoogle, abrirModalLogin]);
-
-  useEffect(() => {
-    if (googleCodePendente) {
-      if (isGoogleLoginFlow) {
-        setModalLoginAberto(false);
-        handleFinalizarGoogleLogin();
-      } else {
-        setAcaoPendente({ tipo: 'google-register' });
-        setModalRegistoAberto(false);
-        setModalTermosAberto(true);
-      }
-    }
-  }, [googleCodePendente, isGoogleLoginFlow, handleFinalizarGoogleLogin]);
-
-  const fecharModalLogin = () => setModalLoginAberto(false);
-  const abrirModalRegistro = () => { setModalLoginAberto(false); setModalRegistoAberto(true); }
-  const fecharModalRegistro = () => setModalRegistoAberto(false);
-  const voltarParaLogin = () => { setModalRegistoAberto(false); setModalLoginAberto(true); }
-  const abrirModalCarrinho = () => setModalCarrinhoAberto(true);
-  const fecharModalCarrinho = () => setModalCarrinhoAberto(false);
-  const fecharModalPagamento = () => setModalPagamentoAberto(false);
-
-  const fecharModaisPendentes = () => {
-    setModalPixAberto(false);
-    setModalBoletoAberto(false);
-    setVendaPendente(null);
-    navigate('/minha-conta/pedidos');
-  }
-
-  const handleCheckout = () => {
-    fecharModalCarrinho();
-    if (usuario) { setModalPagamentoAberto(true); }
-    else { abrirModalLogin(); }
-  };
-
-  const handleSucessoCartao = () => { setModalPagamentoAberto(false); navigate('/minha-conta/pedidos'); }
-  const handleSucessoPix = (vendaGerada: Venda) => { setModalPagamentoAberto(false); setVendaPendente(vendaGerada); setModalPixAberto(true); }
-  const handleSucessoBoleto = (vendaGerada: Venda) => { setModalPagamentoAberto(false); setVendaPendente(vendaGerada); setModalBoletoAberto(true); }
-
-  const handleSubmeterManual = (data: RegistroRequest) => {
-    setAcaoPendente({ tipo: 'manual', dados: data });
-    setModalRegistoAberto(false);
-    setModalTermosAberto(true);
-  };
-
-  const handleTriggerGoogleRegister = () => {
-    setIsGoogleLoginFlow(false);
-    loginComGoogle();
-  };
-  
-  const handleTriggerGoogleLogin = () => {
-    setIsGoogleLoginFlow(true);
-    loginComGoogle();
-  };
-  
-  const handleCancelarTermos = () => {
-    if (acaoPendente?.tipo === 'google-register') {
-        cancelarLoginGoogle();
-    }
-    setAcaoPendente(null);
-    setModalTermosAberto(false);
-  };
-
-  const handleConfirmarTermos = async () => {
-    if (!acaoPendente) return;
-    try {
-      if (acaoPendente.tipo === 'manual' && acaoPendente.dados) {
-        await registrar(acaoPendente.dados);
-      } 
-      else if (acaoPendente.tipo === 'google-register') {
-        await finalizarLoginGoogle();
-      }
-    } catch (err) {
-      showToast.error(formatApiError(err));
-      setAcaoPendente(null);
-      setModalTermosAberto(false);
-      if (acaoPendente.tipo === 'manual') {
-          abrirModalRegistro();
-      }
-    }
-  };
-
-  const handlePromocaoClick = (id: number) => {
-    setFiltroPromocaoId(prevId => (prevId === id ? null : id));
-    const secaoProdutos = document.getElementById('produtos');
-    if (secaoProdutos) {
-        secaoProdutos.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleLimparFiltroPromocao = () => {
-    setFiltroPromocaoId(null);
-  };
+const PaginaInicial: React.FC<PaginaInicialProps> = ({
+  searchTerm,
+  onSearchChange,
+  onLoginClick,
+  onCartClick,
+  filtroPromocaoId,
+  onLimparFiltroPromocao,
+  onPromocaoClick
+}) => {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 relative transition-colors duration-300">
       <VoltarAoTopo />
       <Navbar
-        onLoginClick={abrirModalLogin}
-        onCartClick={abrirModalCarrinho}
+        onLoginClick={onLoginClick}
+        onCartClick={onCartClick}
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={onSearchChange}
       />
 
       <BannerPrincipal />
-      <BannerDestaques onPromocaoClick={handlePromocaoClick} />
+      <BannerDestaques onPromocaoClick={onPromocaoClick} />
       <Diferenciais />
       <CatalogoProdutos 
         filtroPromocaoId={filtroPromocaoId}
-        onLimparFiltroPromocao={handleLimparFiltroPromocao} 
+        onLimparFiltroPromocao={onLimparFiltroPromocao} 
         searchTerm={searchTerm}
       />
       <Sobre />
@@ -198,63 +54,6 @@ const PaginaInicial: React.FC = () => {
       <BoletimInformativo />
 
       <Rodape />
-
-      {modalLoginAberto && (
-        <ModalLogin
-          onClose={fecharModalLogin}
-          onRegisterClick={abrirModalRegistro}
-          onTriggerGoogleLogin={handleTriggerGoogleLogin}
-        />
-      )}
-
-      {modalRegistoAberto && (
-        <ModalRegistro
-          onClose={fecharModalRegistro}
-          onLoginClick={voltarParaLogin}
-          onSubmeterManual={handleSubmeterManual}
-          onTriggerGoogleLogin={handleTriggerGoogleRegister}
-          isLoading={carregando}
-        />
-      )}
-
-      {modalCarrinhoAberto && (
-        <ModalCarrinho
-          onClose={fecharModalCarrinho}
-          onCheckout={handleCheckout}
-        />
-      )}
-
-      {modalPagamentoAberto && (
-        <ModalPagamento
-          aoFechar={fecharModalPagamento}
-          aoSucessoCartao={handleSucessoCartao}
-          aoSucessoPix={handleSucessoPix}
-          aoSucessoBoleto={handleSucessoBoleto}
-        />
-      )}
-
-      {modalTermosAberto && (
-        <ModalTermos
-          isOpen={modalTermosAberto}
-          onClose={handleCancelarTermos}
-          onConfirm={handleConfirmarTermos}
-          isLoading={carregando}
-        />
-      )}
-
-      {modalPixAberto && vendaPendente && (
-          <ModalExibirPix
-              venda={vendaPendente}
-              onClose={fecharModaisPendentes}
-          />
-      )}
-
-      {modalBoletoAberto && vendaPendente && (
-          <ModalExibirBoleto
-              venda={vendaPendente}
-              onClose={fecharModaisPendentes}
-          />
-      )}
     </div>
   );
 }

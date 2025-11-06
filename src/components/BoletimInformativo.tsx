@@ -1,48 +1,40 @@
 import React, { useState } from 'react';
-import { Send, Loader2 } from 'lucide-react'; // 1. Importar Loader2
+import { Send, Loader2 } from 'lucide-react'; 
 import { showToast } from '../utils/toastHelper';
 import { useAuth } from '../contexts/AuthContext';
-import { newsletterService } from '../services/newsletterService'; // 2. Importar o serviço
-import { formatApiError } from '../utils/apiHelpers'; // 3. Importar o formatador de erro
-
+import { newsletterService } from '../services/newsletterService'; 
+import { formatApiError } from '../utils/apiHelpers'; 
 const BoletimInformativo: React.FC = () => {
   const { usuario } = useAuth();
   const [email, setEmail] = useState('');
   const [enviado, setEnviado] = useState(false);
-  const [processando, setProcessando] = useState(false); // 4. Adicionar estado de loading
+  const [processando, setProcessando] = useState(false); 
 
-  const handleSubmit = async (e: React.FormEvent) => { // 5. Transformar em async
+  const handleSubmit = async (e: React.FormEvent) => { 
     e.preventDefault();
-    if (!email || processando) return; // Evita cliques duplos
+    if (!email || processando) return;
 
-    setProcessando(true); // 6. Ativar loading
+    setProcessando(true); 
 
     try {
-      // 7. Chamar a API real
       const resposta = await newsletterService.inscrever(email);
       
       // 8. Sucesso
       setEnviado(true);
       setEmail('');
-      // Usa a mensagem real do backend, se disponível, ou uma padrão
       showToast.success(resposta.message || "Inscrição enviada! Verifique seu e-mail.");
 
-      // O backend agora envia um e-mail de confirmação, então a mensagem de "enviado" pode refletir isso
-      setTimeout(() => {
-        setEnviado(false); // Reseta o formulário após 3 segundos
+     setTimeout(() => {
+        setEnviado(false); 
       }, 3000);
 
     } catch (err) {
-      // 9. Tratar erro
       console.error("Erro ao inscrever newsletter:", err);
-      showToast.error(formatApiError(err)); // Mostra o erro vindo da API
+      showToast.error(formatApiError(err)); 
     } finally {
-      // 10. Desativar loading
       setProcessando(false);
     }
   };
-
-  // Não renderiza nada se o usuário estiver logado
   if (usuario) {
     return null;
   }
@@ -69,15 +61,15 @@ const BoletimInformativo: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={processando} // 11. Desabilitar input
+                disabled={processando} 
               />
               <button
                 type="submit"
                 className="bg-white dark:bg-gray-100 text-green-600 dark:text-green-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors duration-200 shadow-md flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed"
-                disabled={processando} // 12. Desabilitar botão
+                disabled={processando} 
               >
                 {processando ? (
-                  <Loader2 className="w-5 h-5 animate-spin" /> // 13. Mostrar spinner
+                  <Loader2 className="w-5 h-5 animate-spin" /> 
                 ) : (
                   <>
                     <Send className="w-4 h-4" />

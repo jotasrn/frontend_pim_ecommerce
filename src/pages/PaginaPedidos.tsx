@@ -1,16 +1,16 @@
-import React, { useState } from 'react'; // Importar useState
+import React, { useState } from 'react';
 import { usePedidos } from '../hooks/usePedidos';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
-import { formatCurrency, formatDateTime, formatApiError } from '../utils/apiHelpers'; // Importar formatApiError
+import { formatCurrency, formatDateTime, formatApiError } from '../utils/apiHelpers';
 import { Venda } from '../types';
-import { ShoppingBag, AlertCircle, Download, Loader2 } from 'lucide-react'; // Importar Download e Loader2
+import { ShoppingBag, AlertCircle, Download, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { vendaService } from '../services/vendaService'; // Importar o serviço de venda
+import { vendaService } from '../services/vendaService'; 
 import { showToast } from '../utils/toastHelper';
 
 const PaginaPedidos: React.FC = () => {
   const { pedidos, loading, error } = usePedidos();
-  // Novo estado para controlar qual PDF está sendo baixado
+  // Estado para controlar qual PDF está sendo baixado
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   const renderStatus = (status: string) => {

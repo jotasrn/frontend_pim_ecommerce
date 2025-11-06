@@ -20,7 +20,7 @@ const PaginaResetarSenha: React.FC = () => {
   const [isLoadingToken, setIsLoadingToken] = useState(true);
   const [erroToken, setErroToken] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState(false);
-  const [mostrarSenha, setMostrarSenha] = useState(false); // Estado para o 'olhinho'
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ResetFormData>();
 
