@@ -2,14 +2,9 @@
 import api from './api';
 import { Endereco } from '../types';
 
-// O DTO para criar/atualizar um endereço (sem o ID e o cliente)
-// Também omitimos latitude/longitude, pois o back-end calcula isso
 type EnderecoData = Omit<Endereco, 'id' | 'latitude' | 'longitude'>;
 
 export const enderecoService = {
-  /**
-   * Adiciona um novo endereço para um cliente.
-   */
   adicionar: async (clienteId: number, dadosEndereco: EnderecoData): Promise<Endereco> => {
     try {
       const response = await api.post<Endereco>(`/api/enderecos/cliente/${clienteId}`, dadosEndereco);
@@ -20,9 +15,6 @@ export const enderecoService = {
     }
   },
   
-  /**
-   * Lista os endereços de um cliente.
-   */
   listar: async (clienteId: number): Promise<Endereco[]> => {
     try {
       const response = await api.get<Endereco[]>(`/api/enderecos/cliente/${clienteId}`);
@@ -33,9 +25,6 @@ export const enderecoService = {
     }
   },
 
-  /**
-   * Atualiza um endereço existente.
-   */
   atualizar: async (enderecoId: number, dadosEndereco: EnderecoData): Promise<Endereco> => {
     try {
       const response = await api.put<Endereco>(`/api/enderecos/${enderecoId}`, dadosEndereco);
@@ -46,9 +35,6 @@ export const enderecoService = {
     }
   },
 
-  /**
-   * Remove um endereço.
-   */
   remover: async (enderecoId: number): Promise<void> => {
     try {
       await api.delete(`/api/enderecos/${enderecoId}`);

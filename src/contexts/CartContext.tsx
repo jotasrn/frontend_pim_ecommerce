@@ -8,7 +8,7 @@ export interface ItemCarrinho extends Produto {
   quantidade: number;
 }
 
-// Interface para o que o nosso contexto irá fornecer (TUDO EM PORTUGUÊS)
+// Interface para o que o nosso contexto irá fornecer 
 interface TipoCarrinhoContext {
   itensDoCarrinho: ItemCarrinho[];
   adicionarAoCarrinho: (produto: Produto) => void;
@@ -21,9 +21,7 @@ interface TipoCarrinhoContext {
 
 const CartContext = createContext<TipoCarrinhoContext | undefined>(undefined);
 
-/**
- * Hook customizado para consumir o contexto do carrinho.
- */
+
 export const useCarrinho = (): TipoCarrinhoContext => {
   const context = useContext(CartContext);
   if (!context) {
@@ -37,7 +35,6 @@ interface CartProviderProps {
 }
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  // Carrega o carrinho do localStorage ao iniciar
   const [itensDoCarrinho, setItensDoCarrinho] = useState<ItemCarrinho[]>(() => {
     try {
       const carrinhoSalvo = localStorage.getItem('carrinhoHortifruti');
@@ -76,7 +73,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const atualizarQuantidade = (produtoId: number, quantidade: number) => {
     if (quantidade <= 0) {
-      removerDoCarrinho(produtoId); // Remove o item se a quantidade for 0 ou menor
+      removerDoCarrinho(produtoId); 
       return;
     }
     

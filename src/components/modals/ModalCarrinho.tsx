@@ -22,7 +22,7 @@ const ModalCarrinho: React.FC<ModalCarrinhoProps> = ({ onClose, onCheckout }) =>
   return (
     <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-end justify-end z-50 sm:items-center sm:justify-center animate-fadeIn">
       <div
-        className="bg-white dark:bg-gray-800 w-full max-w-md h-full sm:h-auto sm:max-h-[80vh] sm:rounded-lg overflow-hidden shadow-xl animate-slideInRight sm:animate-none border dark:border-gray-700 flex flex-col" // Adicionado flex flex-col
+        className="bg-white dark:bg-gray-800 w-full max-w-md h-full sm:h-auto sm:max-h-[80vh] sm:rounded-lg overflow-hidden shadow-xl animate-slideInRight sm:animate-none border dark:border-gray-700 flex flex-col" 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-4 py-3 border-b dark:border-gray-700 flex-shrink-0">

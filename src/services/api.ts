@@ -4,10 +4,7 @@ import axios from 'axios';
 // Se não encontrar, usa 'http://localhost:8083' como padrão
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083';
 
-/**
- * Cria uma instância centralizada do Axios.
- * Todas as chamadas de API na aplicação devem usar esta instância.
- */
+
 const api = axios.create({
   baseURL: baseURL,
   headers: {
@@ -31,7 +28,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    // Para erros que acontecem antes mesmo da requisição ser enviada
     return Promise.reject(error);
   }
 );

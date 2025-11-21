@@ -19,7 +19,6 @@ const PaginaPoliticas: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 gap-8">
-      {/* SIDEBAR */}
       <aside className="lg:w-1/4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm border dark:border-gray-700 h-fit sticky top-24 p-4">
         <h2 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-3">Navegação Rápida</h2>
         <ul className="space-y-2 text-sm">
@@ -43,7 +42,6 @@ const PaginaPoliticas: React.FC = () => {
         </ul>
       </aside>
 
-      {/* CONTEÚDO PRINCIPAL */}
       <div className="lg:w-3/4 bg-white dark:bg-gray-800 shadow rounded-lg border dark:border-gray-700 p-6 md:p-8 lg:p-10 space-y-10">
         <header>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2">
@@ -54,7 +52,6 @@ const PaginaPoliticas: React.FC = () => {
           </p>
         </header>
 
-        {/* SEÇÕES */}
         <section id="privacidade" className="space-y-4">
           <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 border-b pb-2">
             Política de Privacidade
@@ -190,7 +187,6 @@ const PaginaPoliticas: React.FC = () => {
           </p>
         </section>
 
-        {/* Rodapé legal */}
         <footer className="mt-12 pt-6 border-t dark:border-gray-700 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-500 italic">
             Este documento é informativo e não substitui aconselhamento jurídico. Recomendamos a revisão por

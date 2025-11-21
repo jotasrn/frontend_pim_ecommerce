@@ -11,7 +11,6 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', text }) => {
-  // O tipo Record garante que as chaves de sizeClasses sejam do tipo SpinnerSize
   const sizeClasses: Record<SpinnerSize, string> = {
     sm: 'w-4 h-4',
     md: 'w-6 h-6',

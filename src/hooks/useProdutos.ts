@@ -20,7 +20,6 @@ export const useProdutos = (filtrosIniciais: FiltrosProdutos = {}): UseProdutosR
     setLoading(true);
     setError(null);
     try {
-      // 2. Convertemos a string de volta para um objeto para a chamada de API
       const filtros = JSON.parse(filtrosEstaveis);
       const dados = await produtoService.listar(filtros);
       setProdutos(dados);
@@ -32,7 +31,6 @@ export const useProdutos = (filtrosIniciais: FiltrosProdutos = {}): UseProdutosR
     } finally {
       setLoading(false);
     }
-  // 3. O hook agora depende da string 'filtrosEstaveis', que não muda
   }, [filtrosEstaveis]); 
 
 

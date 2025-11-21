@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, ListOrdered, LogOut, AlertCircle, Edit, Save, X, KeyRound, Trash2, Loader2 } from 'lucide-react';
+import { User, AlertCircle, Edit, Save, X, KeyRound, Trash2, Loader2, ListOrdered, MapPin, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import ModalAlterarSenha from '../components/modals/ModalAlterarSenha';
 import ModalConfirmarExclusao from '../components/modals/ModalConfirmarExclusao';
-import { usuarioService, PerfilUpdateDTO } from '../services/usuarioService'; 
+import { usuarioService, PerfilUpdateDTO } from '../services/usuarioService';
 import { showToast } from '../utils/toastHelper';
 import { formatApiError } from '../utils/apiHelpers';
 
@@ -16,8 +16,24 @@ type PerfilFormData = {
   cpf: string;
 };
 
+const formatarCPF = (valor: string) => {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+const formatarTelefone = (valor: string) => {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/^(\d{2})(\d)/g, '($1) $2')
+    .replace(/(\d)(\d{4})$/, '$1-$2');
+};
+
 const PaginaMinhaConta: React.FC = () => {
-  const { usuario, logout, carregando } = useAuth(); 
+  const { usuario, logout, carregando, reloadUsuario } = useAuth();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -25,11 +41,14 @@ const PaginaMinhaConta: React.FC = () => {
   const [isExcluirModalAberto, setIsExcluirModalAberto] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PerfilFormData>();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<PerfilFormData>();
 
   const perfilIncompleto = !usuario?.cpf || !usuario?.telefone;
   const isGoogleUser = !!usuario?.googleId;
-  const cpfJaPreenchido = !!usuario?.cpf; // Verifica se o CPF já existe
+  const cpfJaPreenchido = !!usuario?.cpf;
+
+  const cpfValue = watch("cpf");
+  const telefoneValue = watch("telefone");
 
   useEffect(() => {
     if (usuario) {
@@ -39,22 +58,35 @@ const PaginaMinhaConta: React.FC = () => {
         telefone: usuario.telefone || '',
       });
     }
-  }, [usuario, isEditing, reset]); // Recarrega o form se o modo de edição mudar
+  }, [usuario, isEditing, reset]);
+
+  useEffect(() => {
+    if (isEditing && cpfValue) {
+      setValue("cpf", formatarCPF(cpfValue));
+    }
+  }, [cpfValue, setValue, isEditing]);
+
+  useEffect(() => {
+    if (isEditing && telefoneValue) {
+      setValue("telefone", formatarTelefone(telefoneValue));
+    }
+  }, [telefoneValue, setValue, isEditing]);
 
   const onSavePerfil: SubmitHandler<PerfilFormData> = async (data) => {
     try {
-      // O DTO enviado para o backend
       const dadosParaEnviar: PerfilUpdateDTO = {
         nomeCompleto: data.nomeCompleto,
         telefone: data.telefone,
-        // Envia o CPF apenas se ele ainda não estiver preenchido
-        cpf: cpfJaPreenchido ? usuario.cpf! : data.cpf
+        cpf: cpfJaPreenchido ? usuario!.cpf! : data.cpf
       };
 
       await usuarioService.atualizarMeuPerfil(dadosParaEnviar);
+      
+      if (reloadUsuario) await reloadUsuario();
+      else window.location.reload();
+
       showToast.success("Perfil atualizado com sucesso!");
       setIsEditing(false);
-      window.location.reload();
 
     } catch (err) {
       showToast.error(formatApiError(err));
@@ -143,7 +175,7 @@ const PaginaMinhaConta: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setIsEditing(false); reset(); }} // Reseta ao cancelar
+                    onClick={() => { setIsEditing(false); reset(); }}
                     className="inline-flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-md hover:bg-gray-200 dark:hover:bg-gray-500"
                   >
                     <X className="w-4 h-4 mr-1.5" /> Cancelar
@@ -201,10 +233,11 @@ const PaginaMinhaConta: React.FC = () => {
                   <input
                     type="text"
                     id="cpf"
-                    {...register("cpf", { required: "CPF é obrigatório" })}
-                    readOnly={!isEditing || cpfJaPreenchido} // Bloqueia se não estiver editando OU se já estiver preenchido
+                    {...register("cpf", { required: "CPF é obrigatório", minLength: { value: 14, message: "CPF inválido" } })}
+                    readOnly={!isEditing || cpfJaPreenchido}
                     className={`w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm dark:bg-gray-700 dark:text-gray-100 ${isEditing && !cpfJaPreenchido ? 'border-gray-300 dark:border-gray-600 focus:ring-green-500 focus:border-green-500' : 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 read-only:opacity-80'}`}
                     placeholder={isEditing && !cpfJaPreenchido ? "000.000.000-00" : (usuario.cpf || "Não informado")}
+                    maxLength={14}
                   />
                   {errors.cpf && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.cpf.message}</p>}
                   {cpfJaPreenchido && !isEditing && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">O CPF não pode ser alterado.</p>}
@@ -224,10 +257,11 @@ const PaginaMinhaConta: React.FC = () => {
                   <input
                     type="tel"
                     id="telefone"
-                    {...register("telefone", { required: "Telefone é obrigatório" })}
+                    {...register("telefone", { required: "Telefone é obrigatório", minLength: { value: 14, message: "Telefone inválido" } })}
                     readOnly={!isEditing}
                     className={`w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm dark:bg-gray-700 dark:text-gray-100 ${isEditing ? 'border-gray-300 dark:border-gray-600 focus:ring-green-500 focus:border-green-500' : 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 read-only:opacity-80'}`}
                     placeholder={isEditing ? "(61) 99999-9999" : "Não informado"}
+                    maxLength={15}
                   />
                   {errors.telefone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.telefone.message}</p>}
                 </div>
@@ -278,7 +312,7 @@ const PaginaMinhaConta: React.FC = () => {
                 Alterar
               </button>
             </div>
-
+            
             <div className="flex items-center justify-between pt-4 border-t dark:border-gray-700">
               <div>
                 <h3 className="font-medium text-red-700 dark:text-red-400">Excluir Conta</h3>
@@ -306,11 +340,11 @@ const PaginaMinhaConta: React.FC = () => {
         </div>
       </div>
 
-      <ModalAlterarSenha
+      <ModalAlterarSenha 
         isOpen={isSenhaModalAberto}
         onClose={() => setIsSenhaModalAberto(false)}
       />
-      <ModalConfirmarExclusao
+      <ModalConfirmarExclusao 
         isOpen={isExcluirModalAberto}
         onClose={() => setIsExcluirModalAberto(false)}
         onConfirm={handleDeleteConta}
