@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 
-// Interface para o evento (para TypeScript)
+// Interface para o evento 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>;
   readonly userChoice: Promise<{
@@ -21,7 +21,6 @@ const isIOS = () => {
     'iPhone',
     'iPod'
   ].includes(navigator.platform)
-  // Além de 'MacIntel' para iPads mais novos no iOS 13+
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
 
@@ -39,7 +38,7 @@ const PwaInstallPrompt: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // 1. Ouve o evento 'beforeinstallprompt'
+    // Ouve o evento 'beforeinstallprompt'
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault(); // Impede o mini-infobar automático do Chrome
       setInstallPromptEvent(e as BeforeInstallPromptEvent);
@@ -51,18 +50,18 @@ const PwaInstallPrompt: React.FC = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // 2. Se for iOS e não estiver instalado, mostra o pop-up de instruções
+    // Se for iOS e não estiver instalado, mostra o pop-up de instruções
     if (isIOS() && !isStandalone()) {
       // Pequeno delay para não sobrecarregar o usuário imediatamente
       const timer = setTimeout(() => {
         setShowIOSInstructions(true);
         setIsVisible(true);
-      }, 3000); // 3 segundos após carregar a página
+      }, 3000); 
       
       return () => clearTimeout(timer);
     }
 
-    // 3. Limpa o listener
+    // Limpa o listener
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
@@ -89,10 +88,9 @@ const PwaInstallPrompt: React.FC = () => {
   const handleClose = () => {
     setIsVisible(false);
     setShowIOSInstructions(false);
-    setInstallPromptEvent(null); // Descarta o prompt se o usuário fechar
+    setInstallPromptEvent(null);
   };
 
-  // Se o pop-up não deve ser visível, não renderiza nada
   if (!isVisible) {
     return null;
   }

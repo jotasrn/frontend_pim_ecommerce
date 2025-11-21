@@ -6,7 +6,7 @@ import { Produto, Categoria } from '../types';
 import CartaoProduto from './CartaoProduto';
 import ModalDetalhesProduto from './modals/ModalDetalhesProduto';
 import LoadingSpinner from './shared/LoadingSpinner'; 
-import { ChevronLeft, ChevronRight, X as IconeX } from 'lucide-react'; // Renomeado X para IconeX
+import { ChevronLeft, ChevronRight, X as IconeX } from 'lucide-react'; 
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";

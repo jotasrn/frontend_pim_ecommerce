@@ -17,6 +17,7 @@ interface AuthContextType {
   loginComGoogle: () => void;
   finalizarLoginGoogle: () => Promise<Usuario | null>;
   cancelarLoginGoogle: () => void;
+  reloadUsuario: () => Promise<void>; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,8 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     showToast.info("Sessão encerrada.");
   }, []);
 
-  useEffect(() => {
-    const carregarUsuarioLogado = async () => {
+  const carregarPerfilDoBackend = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -59,10 +59,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           logout();
         }
       }
-      setCarregando(false);
+  };
+
+  useEffect(() => {
+    const inicializarAuth = async () => {
+       await carregarPerfilDoBackend();
+       setCarregando(false);
     };
-    carregarUsuarioLogado();
+    inicializarAuth();
   }, [logout]);
+
+  const reloadUsuario = async () => {
+      await carregarPerfilDoBackend();
+  };
 
   const login = async (email: string, senha: string): Promise<Usuario | null> => {
     setCarregando(true);
@@ -70,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { token } = await authService.login({ email, senha });
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
       const dadosUsuario = await authService.getMeuPerfil();
       const nomeNormalizado = dadosUsuario.nomeCompleto || dadosUsuario.nome || 'Usuário';
       const usuarioLogado = { ...dadosUsuario, nome: nomeNormalizado };
@@ -100,14 +110,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setCarregando(false);
   };
 
-  // --- CORREÇÃO AQUI (Erro 1 e 2) ---
   const processarErroGoogle = (error?: unknown) => {
     console.error('Erro no fluxo do Google Login:', error);
-    // Usando formatApiError e mudando 'any' para 'unknown'
     showToast.error(formatApiError(error) || "Falha ao iniciar login com Google. Verifique pop-ups.");
     setCarregando(false);
   }
-  // --- FIM DA CORREÇÃO ---
 
   const loginComGoogle = useGoogleLogin({
     onSuccess: processarSucessoGoogle,
@@ -140,7 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       logout();
       setGoogleCodePendente(null);
-      throw error; // Deixa o PaginaInicial.tsx mostrar o erro formatado
+      throw error;
     } finally {
       setCarregando(false);
     }
@@ -164,7 +171,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     verificarPermissao,
     loginComGoogle,
     finalizarLoginGoogle,
-    cancelarLoginGoogle
+    cancelarLoginGoogle,
+    reloadUsuario 
   };
 
   return (

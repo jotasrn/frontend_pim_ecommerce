@@ -10,7 +10,6 @@ import { showToast } from '../utils/toastHelper';
 
 const PaginaPedidos: React.FC = () => {
   const { pedidos, loading, error } = usePedidos();
-  // Estado para controlar qual PDF está sendo baixado
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   const renderStatus = (status: string) => {

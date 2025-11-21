@@ -21,15 +21,14 @@ const Contato: React.FC = () => {
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<DuvidaFormData>({
     defaultValues: {
-      nome: '', email: '', telefone: '', duvida: '', isPublica: false
+      nome: '', email: '', telefone: '', duvida: '', isPublica: false 
     }
   });
 
   useEffect(() => {
     if (usuario) {
-      setValue('nome', usuario.nomeCompleto || usuario.nome);
+      setValue('nome', usuario.nomeCompleto || '');
       setValue('email', usuario.email);
-      setValue('telefone', usuario.telefone || '');
     } else {
       reset({ nome: '', email: '', telefone: '', duvida: '', isPublica: false });
     }
@@ -40,15 +39,19 @@ const Contato: React.FC = () => {
       const dtoParaEnviar: DuvidaRequestDTO = {
         titulo: data.nome,
         email: data.email,
-        pergunta: data.duvida
+        pergunta: data.duvida,
+        isPublica: data.isPublica 
       };
 
       await duvidaService.submeterDuvida(dtoParaEnviar);
+      
       setFormularioEnviado(true);
       showToast.success("Dúvida enviada com sucesso! Responderemos em breve.");
 
       reset({
-        ...data,
+        nome: usuario?.nomeCompleto || '',
+        email: usuario?.email || '',
+        telefone: '',
         duvida: '',
         isPublica: false
       });
@@ -68,6 +71,7 @@ const Contato: React.FC = () => {
         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-100">Entre em Contato</h2>
 
         <div className="grid md:grid-cols-2 gap-10">
+          {/* Coluna da Esquerda: Formulário */}
           <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700">
             <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
               {usuario ? "Envie sua Dúvida" : "Faça Login para Enviar Dúvidas"}
@@ -75,8 +79,9 @@ const Contato: React.FC = () => {
 
             {usuario ? (
               formularioEnviado ? (
-                <div className="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300 px-4 py-3 rounded text-center">
-                  <p>Dúvida enviada! Responderemos em breve no seu e-mail.</p>
+                <div className="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300 px-4 py-3 rounded text-center animate-fadeIn">
+                  <p className="font-medium">Dúvida enviada!</p>
+                  <p className="text-sm mt-1">Nossa equipe analisará sua pergunta. Se houver uma resposta imediata, você receberá por e-mail, caso contrário, nossa equipe responderá em breve.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -91,6 +96,7 @@ const Contato: React.FC = () => {
                     />
                     {errors.nome && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.nome.message}</p>}
                   </div>
+                  
                   <div>
                     <label htmlFor="email-contato" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                     <input
@@ -102,6 +108,7 @@ const Contato: React.FC = () => {
                     />
                     {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>}
                   </div>
+
                   <div>
                     <label htmlFor="telefone-contato" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone (Opcional)</label>
                     <input
@@ -109,10 +116,11 @@ const Contato: React.FC = () => {
                       id="telefone-contato"
                       {...register('telefone')}
                       disabled={isSubmitting}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60"
                       placeholder="(61) 99999-9999"
                     />
                   </div>
+
                   <div>
                     <label htmlFor="duvida-contato" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dúvida / Mensagem</label>
                     <textarea
@@ -120,26 +128,33 @@ const Contato: React.FC = () => {
                       {...register('duvida', { required: 'Sua dúvida é obrigatória' })}
                       rows={4}
                       disabled={isSubmitting}
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${errors.duvida ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 ${errors.duvida ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}`}
+                      placeholder="Como podemos ajudar?"
                     ></textarea>
                     {errors.duvida && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.duvida.message}</p>}
                   </div>
-                  <div className="flex items-center">
-                    <input
-                      id="isPublica"
-                      type="checkbox"
-                      {...register('isPublica')}
-                      disabled={isSubmitting}
-                      className="h-4 w-4 text-green-600 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
-                    />
-                    <label htmlFor="isPublica" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                      Autorizo tornar esta dúvida pública (anonimamente) se for respondida.
-                    </label>
+
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="isPublica"
+                        type="checkbox"
+                        {...register('isPublica')}
+                        disabled={isSubmitting}
+                        className="w-4 h-4 text-green-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500 focus:ring-offset-0"
+                      />
+                    </div>
+                    <div className="ml-2 text-sm">
+                      <label htmlFor="isPublica" className="text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        Autorizo tornar esta dúvida pública na área de "Comunidade" (será exibida de forma anônima).
+                      </label>
+                    </div>
                   </div>
+
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-green-500 dark:bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-600 dark:hover:bg-green-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full bg-green-600 dark:bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 dark:hover:bg-green-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
                     {isSubmitting ? 'Enviando...' : 'Enviar Dúvida'}
@@ -147,17 +162,21 @@ const Contato: React.FC = () => {
                 </form>
               )
             ) : (
-              <div className="text-center py-10 flex flex-col items-center justify-center h-full">
-                <LogIn className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-                <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">Faça login para enviar sua dúvida</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Para que possamos rastrear sua solicitação e respondê-lo(a) corretamente, você precisa estar autenticado.
-                </p>
+              <div className="text-center py-10 flex flex-col items-center justify-center h-full space-y-4">
+                <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-full">
+                  <LogIn className="h-8 w-8 text-gray-500 dark:text-gray-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Faça login para enviar sua dúvida</h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                    Para garantirmos um atendimento personalizado e seguro, é necessário estar autenticado.
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col justify-between text-gray-700 dark:text-gray-300">
+          <div className="flex flex-col justify-between text-gray-700 dark:text-gray-300 space-y-8">
             <div>
               <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Informações de Contato</h3>
               <div className="space-y-5">
@@ -166,7 +185,7 @@ const Contato: React.FC = () => {
                     <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Telefone</p>
+                    <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold">Telefone</p>
                     <p className="font-medium text-gray-800 dark:text-gray-100">(61) 1234-5678</p>
                   </div>
                 </div>
@@ -175,16 +194,16 @@ const Contato: React.FC = () => {
                     <Mail className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                    <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold">Email</p>
                     <p className="font-medium text-gray-800 dark:text-gray-100">contato@hortifruti.com</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                <div className="flex items-start gap-4">
+                  <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full mt-1">
                     <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Endereço (UNIP)</p>
+                    <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold">Endereço (UNIP)</p>
                     <p className="font-medium text-gray-800 dark:text-gray-100">Sgas Quadra 913, Conjunto B - Asa Sul</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Brasília - DF, 70390-130</p>
                   </div>
@@ -192,66 +211,55 @@ const Contato: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-100">Horário de Funcionamento</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-100">Segunda - Sexta</p>
-                  <p className="text-gray-500 dark:text-gray-400">07:00 - 20:00</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-100">Sábado</p>
-                  <p className="text-gray-500 dark:text-gray-400">08:00 - 18:00</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-100">Domingo</p>
-                  <p className="text-gray-500 dark:text-gray-400">08:00 - 14:00</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-100">Feriados</p>
-                  <p className="text-gray-500 dark:text-gray-400">09:00 - 14:00</p>
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">Horário de Funcionamento</h3>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="grid grid-cols-2 gap-y-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">Segunda - Sexta</p>
+                    <p className="text-gray-500 dark:text-gray-400">07:00 - 20:00</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">Sábado</p>
+                    <p className="text-gray-500 dark:text-gray-400">08:00 - 18:00</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">Domingo</p>
+                    <p className="text-gray-500 dark:text-gray-400">08:00 - 14:00</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">Feriados</p>
+                    <p className="text-gray-500 dark:text-gray-400">09:00 - 14:00</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-              <h4 className="text-base font-semibold mb-3 text-gray-800 dark:text-gray-100">
-                Localização (UNIP Asa Sul)
-              </h4>
+            <div className="relative rounded-lg overflow-hidden cursor-pointer group shadow-md h-64 border border-gray-200 dark:border-gray-700">
               <a
-                href="https://maps.app.goo.gl/XX1RGfRNitQB1swZ6"
+                href="https://www.google.com/maps/search/?api=1&query=UNIP+Asa+Sul+Brasilia"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block relative rounded-lg overflow-hidden cursor-pointer group"
+                className="block h-full w-full"
                 aria-label="Abrir localização da UNIP Asa Sul no Google Maps"
               >
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.2005741960567!2d-47.92192962453466!3d-15.81857117291212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935a2a6b29b329c3%3A0x4d39f7528e578652!2sUNIP%20-%20Asa%20Sul!5e0!3m2!1spt-BR!2sbr!4v1730502155000!5m2!1spt-BR!2sbr"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.265708368304!2d-47.9172!3d-15.814!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935a2f5844755555%3A0x1e1e1e1e1e1e1e1e!2sUNIP%20-%20Universidade%20Paulista%20-%20Campus%20Bras%C3%ADlia!5e0!3m2!1spt-BR!2sbr!4v1620000000000!5m2!1spt-BR!2sbr"
                   width="100%"
-                  height="280"
+                  height="100%"
                   style={{ border: 0 }}
                   allowFullScreen={false}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Localização da UNIP Asa Sul"
-                  className="pointer-events-none"
+                  className="pointer-events-none grayscale-[50%] group-hover:grayscale-0 transition-all duration-500"
                 ></iframe>
 
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-10 h-10 text-red-600 drop-shadow-lg animate-bounce"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
-                  </svg>
-                </div>
-
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-white font-semibold bg-black/70 px-4 py-2 rounded-md text-sm">
-                    Abrir no Google Maps
-                  </p>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors duration-300">
+                  <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white font-semibold px-4 py-2 rounded-full shadow-lg transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-red-500" />
+                    Abrir no Maps
+                  </div>
                 </div>
               </a>
             </div>

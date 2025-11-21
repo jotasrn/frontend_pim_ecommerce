@@ -158,6 +158,7 @@ export interface Faq {
   id: number;
   pergunta: string;
   resposta: string;
+  categoria: string;
   ativa: boolean;
 }
 
@@ -166,6 +167,7 @@ export interface DuvidaResposta {
   resposta: string;
   dataResposta: string;
   gerente: Usuario;
+  createdAt?: string;
 }
 
 export interface Duvida {
@@ -177,6 +179,7 @@ export interface Duvida {
   isPublica: boolean;
   status: string;
   dataCriacao: string;
+  createdAt?: string;
   resposta: DuvidaResposta | null;
 }
 
@@ -184,4 +187,5 @@ export interface DuvidaRequestDTO {
   titulo: string;
   email: string;
   pergunta: string;
+  isPublica: boolean;
 }

@@ -9,15 +9,14 @@ interface UseEnderecosReturn {
   enderecos: Endereco[];
   loading: boolean;
   error: string | null;
-  recarregarEnderecos: () => void; // Função para recarregar a lista após adicionar/remover
+  recarregarEnderecos: () => void; 
 }
 
 export const useEnderecos = (): UseEnderecosReturn => {
   const [enderecos, setEnderecos] = useState<Endereco[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { usuario } = useAuth(); // Pega o usuário logado
-
+  const { usuario } = useAuth(); 
   const carregarEnderecos = useCallback(async () => {
     if (!usuario) return; // Não faz nada se o usuário não estiver logado
 
@@ -43,6 +42,6 @@ export const useEnderecos = (): UseEnderecosReturn => {
     enderecos,
     loading,
     error,
-    recarregarEnderecos: carregarEnderecos, // Expõe a função de recarregar
+    recarregarEnderecos: carregarEnderecos, 
   };
 };
